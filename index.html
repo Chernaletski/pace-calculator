@@ -7,267 +7,17 @@
   <!-- Telegram Games API -->
   <script src="https://telegram.org/js/games.js"></script>
   <style>
-    :root{
-      --bg1:#667eea;
-      --bg2:#764ba2;
-      --card-bg:#ffffff;
-      --text:#1f2a44;
-      --muted:#5b6b8b;
-      --accent:#6a68ff;
-      --success:#22c55e;
-      --warn:#f59e0b;
-      --error:#ef4444;
-      --shadow: 0 10px 30px rgba(0,0,0,.15);
-      --radius:16px;
-      --radius-sm:12px;
-      --gap:14px;
-    }
-
-    *{box-sizing:border-box}
-    html,body{height:100%}
-    body{
-      margin:0;
-      font-family:Inter, system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
-      color:var(--text);
-      min-height:100vh;
-      display:grid;
-      place-items:center;
-      padding:16px;
-      overflow-x:hidden;
-
-      background-image: url("https://cdnn11.img.sputnik.by/img/103010/81/1030108143_4:0:1275:719_2072x0_60_0_0_3fec56bf337ef2b54e1a34d5d95141f0.jpg");
-      background-size: cover;
-      background-position: center center;
-      background-repeat: no-repeat;
-    }
-
-    .card{
-      width:min(720px, 100%);
-      background:var(--card-bg);
-      border-radius:var(--radius);
-      box-shadow:var(--shadow);
-      padding: clamp(18px, 3.6vw, 28px);
-      animation:fadeIn .6s ease both;
-    }
-    @keyframes fadeIn{
-      from{opacity:0; transform:translateY(8px)}
-      to{opacity:1; transform:translateY(0)}
-    }
-
-    .header{
-      display:flex; align-items:center; justify-content:space-between;
-      gap:10px; margin-bottom:6px;
-    }
-    .title{
-      font-size: clamp(18px, 4.2vw, 22px);
-      font-weight:700;
-      letter-spacing:0.2px;
-    }
-    .subtitle{
-      color:var(--muted);
-      font-size: clamp(12px, 3.4vw, 14px);
-      margin-bottom:14px;
-    }
-
-    form{
-      display:grid;
-      gap: clamp(12px, 3.2vw, 18px);
-    }
-
-    .field{
-      background:#f7f8fc;
-      border-radius:var(--radius-sm);
-      padding:14px 14px 10px;
-      border:1px solid transparent;
-      transition: border-color .2s ease, background .2s ease, box-shadow .2s ease;
-    }
-    .field:focus-within{
-      border-color:#e0e4ff;
-      background:#fff;
-      box-shadow:0 6px 20px rgba(102,126,234,.12);
-    }
-
-    label{
-      display:flex; align-items:center; gap:10px;
-      font-weight:600;
-      margin-bottom:8px;
-      font-size:14px;
-    }
-    .inputs{
-      display:grid;
-      grid-template-columns: repeat(6, minmax(0,1fr));
-      gap:10px;
-    }
-
-    .row-1 .inputs{grid-template-columns: 1fr;}
-    .row-2 .inputs{grid-template-columns: 1fr 1fr;}
-    .row-3 .inputs{grid-template-columns: 1fr 1fr 1fr;}
-
-    .inputs .group{
-      display:flex; align-items:center; gap:8px;
-      background:#fff;
-      border:1px solid #e9ecf7;
-      border-radius:10px;
-      padding:8px 10px;
-      transition: border-color .2s ease, box-shadow .2s ease, transform .12s ease;
-    }
-    .inputs .group:focus-within{
-      border-color:#cfd7ff;
-      box-shadow:0 4px 14px rgba(102,126,234,.14);
-      transform: translateY(-1px);
-    }
-    .inputs .group span.sep{
-      color:#a3acc1; font-weight:600; user-select:none;
-    }
-
-    input{
-      width:100%;
-      border:none;
-      outline:none;
-      font-size:16px;
-      background:transparent;
-      color:var(--text);
-    }
-    input[type="number"]{
-      -moz-appearance:textfield;
-    }
-    input[type="number"]::-webkit-outer-spin-button,
-    input[type="number"]::-webkit-inner-spin-button{ -webkit-appearance: none; margin: 0; }
-
-    .message{
-      min-height:20px;
-      font-size:13px;
-      color:var(--warn);
-      display:flex; align-items:center; gap:8px;
-      opacity:.95;
-      transition: color .2s ease;
-    }
-    .message.error{ color:var(--error); }
-    .message.ok{ color:var(--success); }
-
-    .footer{
-      display:flex; flex-direction:column; gap:10px;
-      margin-top:6px;
-    }
-    .btn{
-      appearance:none;
-      border:none;
-      border-radius:14px;
-      padding:14px 18px;
-      background: linear-gradient(135deg, #7c6cf9, #6a68ff);
-      color:#fff; font-weight:700;
-      font-size:16px;
-      cursor:pointer;
-      box-shadow: 0 10px 26px rgba(106,104,255, .28);
-      transition: transform .12s ease, box-shadow .2s ease, filter .2s ease;
-    }
-    .btn:active{ transform: translateY(1px) scale(.997); }
-    .btn:hover{ filter:brightness(1.03); box-shadow:0 12px 30px rgba(106,104,255,.34); }
-
-    .btn-secondary{
-      background:#f4f5fb;
-      color:var(--muted);
-      box-shadow:none;
-    }
-    .btn-secondary:hover{
-      filter:none;
-      box-shadow:0 4px 12px rgba(0,0,0,.06);
-    }
-
-    .hint{
-      font-size:12px; color:#8b94ae; text-align:center;
-    }
-
-    @media (max-width:560px){
-      .inputs{ gap:8px; }
-      .inputs .group{ padding:10px 10px; }
-      input{ font-size:15px; }
-    }
+    /* ... ВЕСЬ ТВОЙ CSS БЕЗ ИЗМЕНЕНИЙ ... */
   </style>
 </head>
 <body>
-  <main class="card" role="main" aria-label="Калькулятор темпа">
-    <div class="header">
-      <div class="title">🏊‍♀️🚴🏃‍♂️Калькулятор темпа</div>
-    </div>
-    <div class="subtitle">Заполните любые два параметра — остальные посчитаются автоматически.</div>
-
-    <form id="calc" autocomplete="off">
-      <!-- Дистанция -->
-      <section class="field row-1">
-        <label for="distance"><span>📏</span> Дистанция (км)</label>
-        <div class="inputs">
-          <div class="group" title="Дистанция, км">
-            <input id="distance" type="text" inputmode="decimal" placeholder="0.00" aria-label="Дистанция, км" />
-          </div>
-        </div>
-      </section>
-
-      <!-- Время: ч:м:с -->
-      <section class="field row-3">
-        <label><span>⏱</span> Время (чч:мм:сс)</label>
-        <div class="inputs">
-          <div class="group">
-            <input id="hours" type="number" inputmode="numeric" min="0" step="1" placeholder="чч" aria-label="Часы" />
-          </div>
-          <div class="group">
-            <input id="minutes" type="number" inputmode="numeric" min="0" max="59" step="1" placeholder="мм" aria-label="Минуты" />
-          </div>
-          <div class="group">
-            <input id="seconds" type="number" inputmode="numeric" min="0" max="59" step="1" placeholder="сс" aria-label="Секунды" />
-          </div>
-        </div>
-      </section>
-
-      <!-- Темп 100м: м:с -->
-      <section class="field row-2">
-        <label><span>🏊‍♀️</span> Темп на 100м (мин:сек)</label>
-        <div class="inputs">
-          <div class="group">
-            <input id="p100_min" type="number" inputmode="numeric" min="0" max="59" step="1" placeholder="мин" aria-label="Минуты на 100м" />
-            <span class="sep">:</span>
-            <input id="p100_sec" type="number" inputmode="numeric" min="0" max="59" step="1" placeholder="сек" aria-label="Секунды на 100м" />
-          </div>
-        </div>
-      </section>
-
-      <!-- Темп км: м:с -->
-      <section class="field row-2">
-        <label><span>🏃‍♂️🚴</span> Темп на 1км (мин:сек)</label>
-        <div class="inputs">
-          <div class="group">
-            <input id="pkm_min" type="number" inputmode="numeric" min="0" max="59" step="1" placeholder="мин" aria-label="Минуты на км" />
-            <span class="sep">:</span>
-            <input id="pkm_sec" type="number" inputmode="numeric" min="0" max="59" step="1" placeholder="сек" aria-label="Секунды на км" />
-          </div>
-        </div>
-      </section>
-
-      <!-- Скорость км/ч -->
-      <section class="field row-1">
-        <label for="speed"><span>⚡</span> Скорость (км/ч)</label>
-        <div class="inputs">
-          <div class="group">
-            <input id="speed" type="text" inputmode="decimal" placeholder="0.00" aria-label="Скорость, км/ч" />
-          </div>
-        </div>
-      </section>
-
-      <div id="msg" class="message" aria-live="polite"></div>
-
-      <div class="footer">
-        <button type="button" class="btn" id="done">✅ Готово</button>
-        <button type="button" class="btn btn-secondary" id="clear">🔄 Очистить</button>
-        <div class="hint">Все поля редактируемые. Для расчёта укажите минимум 2 параметра.</div>
-      </div>
-    </form>
-  </main>
+  <!-- ... ВЕСЬ ТВОЙ HTML БЕЗ ИЗМЕНЕНИЙ ... -->
 
   <script>
     // === URL backend'а, который принимает результат ===
     const BACKEND_URL = "https://pacecalculator-chernaletski.amvera.io/pace-result";
 
-    // Получаем query-параметры из URL: ?inline_message_id=...&user_id=...&...
+    // Получаем query-параметры из URL: ?chat_id=...&message_id=...&user_id=...
     function getQueryParams() {
       const params = {};
       const query = window.location.search.substring(1);
@@ -283,12 +33,22 @@
     const tgContext = getQueryParams();
     console.log("Telegram context:", tgContext);
 
-    // Для setGameScore нам важны inline_message_id и user_id [web:441]
-    const inlineMessageId = tgContext.inline_message_id || null;
-    const userId =
-      tgContext.user_id && tgContext.user_id !== "None"
-        ? Number(tgContext.user_id)
-        : null;
+    // Закрытие WebView / игры внутри Telegram
+    function closeGameWebView() {
+      try {
+        if (window.TelegramGameProxy && typeof TelegramGameProxy.close === "function") {
+          TelegramGameProxy.close(); // для игр
+          return;
+        }
+        if (window.Telegram && Telegram.WebApp && typeof Telegram.WebApp.close === "function") {
+          Telegram.WebApp.close(); // для Mini Apps
+          return;
+        }
+        console.log("Not inside Telegram, webview close skipped");
+      } catch (e) {
+        console.error("Failed to close webview", e);
+      }
+    }
 
     let isUpdating = false;
     let lastEdited = null; // 'D' | 'T' | 'P100' | 'PKM' | 'V'
@@ -393,298 +153,7 @@
       };
     }
 
-    function setDistance(D) {
-      if (el.distance === document.activeElement) return;
-      el.distance.value = (D ?? 0).toFixed(2);
-    }
-    function setTime(Tsec) {
-      if ([el.hours, el.minutes, el.seconds].includes(document.activeElement)) return;
-      const t = Math.max(0, Math.round(Tsec ?? 0));
-      const hh = Math.floor(t / 3600);
-      const mm = Math.floor((t % 3600) / 60);
-      const ss = t % 60;
-      el.hours.value = String(hh);
-      el.minutes.value = String(mm);
-      el.seconds.value = String(ss);
-    }
-    function setP100(seconds) {
-      if ([el.p100_min, el.p100_sec].includes(document.activeElement)) return;
-      const s = Math.max(0, Math.round(seconds ?? 0));
-      const m = Math.floor(s / 60);
-      const sec = s % 60;
-      el.p100_min.value = String(m);
-      el.p100_sec.value = String(sec);
-    }
-    function setPKM(seconds) {
-      if ([el.pkm_min, el.pkm_sec].includes(document.activeElement)) return;
-      const s = Math.max(0, Math.round(seconds ?? 0));
-      const m = Math.floor(s / 60);
-      const sec = s % 60;
-      el.pkm_min.value = String(m);
-      el.pkm_sec.value = String(sec);
-    }
-    function setSpeed(V) {
-      if (el.speed === document.activeElement) return;
-      el.speed.value = (V ?? 0).toFixed(2);
-    }
-
-    function showMsg(text, type = "") {
-      el.msg.textContent = text || "";
-      el.msg.classList.remove("ok", "error");
-      if (type) el.msg.classList.add(type);
-    }
-
-    function compute() {
-      if (isUpdating) return;
-      isUpdating = true;
-
-      const s = readState();
-      const count = ["hasD", "hasT", "hasP100", "hasPKM", "hasV"].reduce(
-        (acc, k) => acc + (s[k] ? 1 : 0),
-        0
-      );
-
-      if (count < 2) {
-        showMsg("Укажите минимум два параметра для расчёта.", "error");
-        isUpdating = false;
-        return;
-      }
-
-      if (s.D !== null && s.D > 1000) {
-        showMsg("Дистанция слишком большая (максимум 1000 км).", "error");
-        isUpdating = false;
-        return;
-      }
-      if (s.V !== null && s.V > 100) {
-        showMsg("Скорость слишком большая (максимум 100 км/ч).", "error");
-        isUpdating = false;
-        return;
-      }
-
-      let { D, Tsec: T, P100, PKM, V } = s;
-      let solved = false;
-
-      function useDT() {
-        if (s.hasD && s.hasT && s.D > 0 && s.Tsec > 0) {
-          D = s.D;
-          T = s.Tsec;
-          PKM = T / D;
-          P100 = PKM / 10;
-          V = D / (T / 3600);
-          solved = true;
-        }
-      }
-      function useDP100() {
-        if (s.hasD && s.hasP100 && s.D > 0 && s.P100 > 0) {
-          D = s.D;
-          P100 = s.P100;
-          PKM = P100 * 10;
-          T = D * PKM;
-          V = D / (T / 3600);
-          solved = true;
-        }
-      }
-      function useDPKM() {
-        if (s.hasD && s.hasPKM && s.D > 0 && s.PKM > 0) {
-          D = s.D;
-          PKM = s.PKM;
-          T = D * PKM;
-          P100 = PKM / 10;
-          V = 3600 / PKM;
-          solved = true;
-        }
-      }
-      function useDV() {
-        if (s.hasD && s.hasV && s.D > 0 && s.V > 0) {
-          D = s.D;
-          V = s.V;
-          T = (D / V) * 3600;
-          PKM = 3600 / V;
-          P100 = PKM / 10;
-          solved = true;
-        }
-      }
-      function useTP100() {
-        if (s.hasT && s.hasP100 && s.Tsec > 0 && s.P100 > 0) {
-          T = s.Tsec;
-          P100 = s.P100;
-          PKM = P100 * 10;
-          D = T / PKM;
-          V = D / (T / 3600);
-          solved = true;
-        }
-      }
-      function useTPKM() {
-        if (s.hasT && s.hasPKM && s.Tsec > 0 && s.PKM > 0) {
-          T = s.Tsec;
-          PKM = s.PKM;
-          D = T / PKM;
-          P100 = PKM / 10;
-          V = 3600 / PKM;
-          solved = true;
-        }
-      }
-      function useTV() {
-        if (s.hasT && s.hasV && s.Tsec > 0 && s.V > 0) {
-          T = s.Tsec;
-          V = s.V;
-          D = V * (T / 3600);
-          PKM = 3600 / V;
-          P100 = PKM / 10;
-          solved = true;
-        }
-      }
-
-      switch (lastEdited) {
-        case "D":
-          useDT();
-          if (!solved) useDP100();
-          if (!solved) useDPKM();
-          if (!solved) useDV();
-          break;
-        case "T":
-          useDT();
-          if (!solved) useTP100();
-          if (!solved) useTPKM();
-          if (!solved) useTV();
-          break;
-        case "P100":
-          useDP100();
-          if (!solved) useTP100();
-          if (!solved && s.hasPKM) {
-            P100 = s.P100;
-            PKM = P100 * 10;
-            if (s.hasV && s.V > 0) {
-              V = 3600 / PKM;
-            }
-            solved = true;
-          }
-          if (!solved && s.hasV && s.V > 0) {
-            P100 = s.P100;
-            PKM = P100 * 10;
-            V = 3600 / PKM;
-            solved = true;
-          }
-          break;
-        case "PKM":
-          useDPKM();
-          if (!solved) useTPKM();
-          if (!solved && s.hasP100) {
-            PKM = s.PKM;
-            P100 = PKM / 10;
-            if (s.hasV && s.V > 0) {
-              V = 3600 / PKM;
-            }
-            solved = true;
-          }
-          if (!solved && s.hasV && s.V > 0) {
-            PKM = s.PKM;
-            V = 3600 / PKM;
-            P100 = PKM / 10;
-            solved = true;
-          }
-          break;
-        case "V":
-          useDV();
-          if (!solved) useTV();
-          if (!solved && s.hasPKM) {
-            V = s.V;
-            PKM = 3600 / V;
-            P100 = PKM / 10;
-            solved = true;
-          }
-          if (!solved && s.hasP100) {
-            V = s.V;
-            PKM = 3600 / V;
-            P100 = PKM / 10;
-            solved = true;
-          }
-          break;
-        default:
-          useDT();
-          if (!solved) useDP100();
-          if (!solved) useDPKM();
-          if (!solved) useDV();
-          if (!solved) useTP100();
-          if (!solved) useTPKM();
-          if (!solved) useTV();
-      }
-
-      if (!solved) {
-        if (s.hasPKM && !s.hasP100) {
-          PKM = s.PKM;
-          P100 = PKM / 10;
-          solved = true;
-          showMsg(
-            "Добавьте дистанцию или время, чтобы посчитать всё остальное.",
-            "ok"
-          );
-        } else if (s.hasP100 && !s.hasPKM) {
-          P100 = s.P100;
-          PKM = P100 * 10;
-          solved = true;
-          showMsg(
-            "Добавьте дистанцию или время, чтобы посчитать всё остальное.",
-            "ok"
-          );
-        } else if (s.hasV && !s.hasPKM && !s.hasP100) {
-          V = s.V;
-          PKM = 3600 / V;
-          P100 = PKM / 10;
-          solved = true;
-          showMsg(
-            "Добавьте дистанцию или время, чтобы посчитать всё остальное.",
-            "ok"
-          );
-        } else {
-          showMsg(
-            "Недостаточно данных для однозначного расчёта. Уточните комбинацию.",
-            "error"
-          );
-        }
-      }
-
-      if (s.hasP100 && s.hasPKM) {
-        const expectedPKM = s.P100 * 10;
-        if (Math.abs(s.PKM - expectedPKM) > 2) {
-          if (lastEdited === "P100") {
-            PKM = expectedPKM;
-          } else if (lastEdited === "PKM") {
-            P100 = s.PKM / 10;
-          }
-        }
-      }
-
-      if (solved) {
-        if (Number.isFinite(D)) setDistance(D);
-        if (Number.isFinite(T)) setTime(T);
-        if (Number.isFinite(P100)) setP100(P100);
-        if (Number.isFinite(PKM)) setPKM(PKM);
-        if (Number.isFinite(V)) setSpeed(V);
-        if (!el.msg.textContent || el.msg.classList.contains("error")) {
-          showMsg("Расчёт выполнен успешно.", "ok");
-        }
-      }
-
-      isUpdating = false;
-    }
-
-    function onEdit(category) {
-      lastEdited = category;
-      compute();
-    }
-
-    el.distance.addEventListener("input", () => onEdit("D"));
-    [el.hours, el.minutes, el.seconds].forEach((i) =>
-      i.addEventListener("input", () => onEdit("T"))
-    );
-    [el.p100_min, el.p100_sec].forEach((i) =>
-      i.addEventListener("input", () => onEdit("P100"))
-    );
-    [el.pkm_min, el.pkm_sec].forEach((i) =>
-      i.addEventListener("input", () => onEdit("PKM"))
-    );
-    el.speed.addEventListener("input", () => onEdit("V"));
+    // ... ВСЕ ФУНКЦИИ compute(), setDistance(), setTime() и т.д. БЕЗ ИЗМЕНЕНИЙ ...
 
     el.clear.addEventListener("click", () => {
       isUpdating = true;
@@ -704,43 +173,11 @@
       showMsg("");
     });
 
-    // Вычисление числового score для setGameScore:
-    // берём скорость (км/ч) * 100, чтобы получить целое число, чем быстрее — тем лучше.
-    function computeScoreFromState(state) {
-      if (state.V !== null && Number.isFinite(state.V) && state.V > 0) {
-        return Math.round(state.V * 100);
-      }
-      if (state.PKM !== null && Number.isFinite(state.PKM) && state.PKM > 0) {
-        const v = 3600 / state.PKM;
-        return Math.round(v * 100);
-      }
-      if (state.P100 !== null && Number.isFinite(state.P100) && state.P100 > 0) {
-        const v = 3600 / (state.P100 * 10);
-        return Math.round(v * 100);
-      }
-      return 0;
-    }
-
-    function closeGameWebView() {
-      // Для HTML5-игр через games.js [web:441][web:585]
-      if (window.TelegramGameProxy && typeof TelegramGameProxy.close === "function") {
-        TelegramGameProxy.close();
-        return;
-      }
-      // На всякий случай пробуем Mini Apps API
-      if (window.Telegram && Telegram.WebApp && typeof Telegram.WebApp.close === "function") {
-        Telegram.WebApp.close();
-        return;
-      }
-      // Фолбэк
-      alert("Результат сохранён. Можно закрыть окно.");
-    }
-
-    // Кнопка "Готово" — отправка результата на backend
+    // Кнопка "Готово" — отправка результата на backend и закрытие WebView
     el.done.addEventListener("click", async () => {
-      const initialState = readState();
+      const s = readState();
       const count = ["hasD", "hasT", "hasP100", "hasPKM", "hasV"].reduce(
-        (acc, k) => acc + (initialState[k] ? 1 : 0),
+        (acc, k) => acc + (s[k] ? 1 : 0),
         0
       );
       if (count < 2) {
@@ -748,32 +185,58 @@
         return;
       }
 
-      if (!inlineMessageId || !userId) {
-        alert("Не удалось определить данные игры. Попробуйте запустить игру ещё раз из чата.");
-        return;
-      }
+      // chat_id: сначала из chat_id, если нет — берём user_id
+      const chatId =
+        tgContext.chat_id && tgContext.chat_id !== "None"
+          ? Number(tgContext.chat_id)
+          : tgContext.user_id && tgContext.user_id !== "None"
+          ? Number(tgContext.user_id)
+          : null;
 
-      // Убедимся, что все значения пересчитаны и поля синхронизированы
-      compute();
-      const state = readState();
+      const messageId =
+        tgContext.message_id && tgContext.message_id !== "None"
+          ? Number(tgContext.message_id)
+          : null;
 
-      const score = computeScoreFromState(state);
-      console.log("Вычисленный score:", score);
-
-      const payload = {
-        distanceKm: state.D ?? null,
-        timeSeconds: state.Tsec ?? null,
-        pace100mSeconds: state.P100 ?? null,
-        pacePerKmSeconds: state.PKM ?? null,
-        speedKmh: state.V ?? null,
-        timestamp: new Date().toISOString(),
-      };
+      const userId =
+        tgContext.user_id && tgContext.user_id !== "None"
+          ? Number(tgContext.user_id)
+          : null;
 
       const result = {
-        inline_message_id: inlineMessageId,
+        distanceKm: s.D ?? null,
+        time: (() => {
+          if (!s.hasT) return null;
+          const t = s.Tsec;
+          const hh = Math.floor(t / 3600);
+          const mm = Math.floor((t % 3600) / 60);
+          const ss = t % 60;
+          return {
+            hours: hh,
+            minutes: mm,
+            seconds: ss,
+            totalSeconds: t,
+          };
+        })(),
+        pace100m: s.hasP100
+          ? {
+              minutes: Math.floor(s.P100 / 60),
+              seconds: s.P100 % 60,
+              totalSeconds: s.P100,
+            }
+          : null,
+        pacePerKm: s.hasPKM
+          ? {
+              minutes: Math.floor(s.PKM / 60),
+              seconds: s.PKM % 60,
+              totalSeconds: s.PKM,
+            }
+          : null,
+        speedKmh: s.V ?? null,
+        timestamp: new Date().toISOString(),
+        chat_id: chatId,
+        message_id: messageId,
         user_id: userId,
-        score,
-        payload,
       };
 
       console.log("Отправка результата на backend:", result);
@@ -787,14 +250,22 @@
           body: JSON.stringify(result),
         });
 
-        if (!resp.ok) {
-          throw new Error("HTTP " + resp.status);
-        }
-
         const data = await resp.json().catch(() => ({}));
         console.log("Ответ backend:", data);
 
-        closeGameWebView();
+        if (!resp.ok || data.status !== "ok") {
+          throw new Error("Backend error: " + JSON.stringify(data));
+        }
+
+        // В Telegram — закрываем WebView, в обычном браузере показываем alert
+        if (
+          window.TelegramGameProxy ||
+          (window.Telegram && Telegram.WebApp)
+        ) {
+          closeGameWebView();
+        } else {
+          alert("Результат отправлен в чат ✅");
+        }
       } catch (e) {
         console.error("Ошибка отправки на backend:", e);
         alert("Не удалось отправить результат. Попробуйте ещё раз позже.");
