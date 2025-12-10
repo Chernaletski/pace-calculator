@@ -4,6 +4,8 @@
   <meta charset="utf-8" />
   <title>Калькулятор темпа</title>
   <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <!-- Telegram Mini Apps API -->
+  <script src="https://telegram.org/js/telegram-web-app.js"></script>
   <!-- Telegram Games API -->
   <script src="https://telegram.org/js/games.js"></script>
   <style>
@@ -22,7 +24,7 @@
       --radius-sm:12px;
       --gap:14px;
     }
- 
+
     *{box-sizing:border-box}
     html,body{height:100%}
     body{
@@ -34,13 +36,13 @@
       place-items:center;
       padding:16px;
       overflow-x:hidden;
- 
+
       background-image: url("https://cdnn11.img.sputnik.by/img/103010/81/1030108143_4:0:1275:719_2072x0_60_0_0_3fec56bf337ef2b54e1a34d5d95141f0.jpg");
       background-size: cover;
       background-position: center center;
       background-repeat: no-repeat;
     }
- 
+
     .card{
       width:min(720px, 100%);
       background:var(--card-bg);
@@ -53,7 +55,7 @@
       from{opacity:0; transform:translateY(8px)}
       to{opacity:1; transform:translateY(0)}
     }
- 
+
     .header{
       display:flex; align-items:center; justify-content:space-between;
       gap:10px; margin-bottom:6px;
@@ -68,12 +70,12 @@
       font-size: clamp(12px, 3.4vw, 14px);
       margin-bottom:14px;
     }
- 
+
     form{
       display:grid;
       gap: clamp(12px, 3.2vw, 18px);
     }
- 
+
     .field{
       background:#f7f8fc;
       border-radius:var(--radius-sm);
@@ -86,7 +88,7 @@
       background:#fff;
       box-shadow:0 6px 20px rgba(102,126,234,.12);
     }
- 
+
     label{
       display:flex; align-items:center; gap:10px;
       font-weight:600;
@@ -98,11 +100,11 @@
       grid-template-columns: repeat(6, minmax(0,1fr));
       gap:10px;
     }
- 
+
     .row-1 .inputs{grid-template-columns: 1fr;}
     .row-2 .inputs{grid-template-columns: 1fr 1fr;}
     .row-3 .inputs{grid-template-columns: 1fr 1fr 1fr;}
- 
+
     .inputs .group{
       display:flex; align-items:center; gap:8px;
       background:#fff;
@@ -119,7 +121,7 @@
     .inputs .group span.sep{
       color:#a3acc1; font-weight:600; user-select:none;
     }
- 
+
     input{
       width:100%;
       border:none;
@@ -133,7 +135,7 @@
     }
     input[type="number"]::-webkit-outer-spin-button,
     input[type="number"]::-webkit-inner-spin-button{ -webkit-appearance: none; margin: 0; }
- 
+
     .message{
       min-height:20px;
       font-size:13px;
@@ -144,7 +146,7 @@
     }
     .message.error{ color:var(--error); }
     .message.ok{ color:var(--success); }
- 
+
     .footer{
       display:flex; flex-direction:column; gap:10px;
       margin-top:6px;
@@ -163,7 +165,7 @@
     }
     .btn:active{ transform: translateY(1px) scale(.997); }
     .btn:hover{ filter:brightness(1.03); box-shadow:0 12px 30px rgba(106,104,255,.34); }
- 
+
     .btn-secondary{
       background:#f4f5fb;
       color:var(--muted);
@@ -173,11 +175,11 @@
       filter:none;
       box-shadow:0 4px 12px rgba(0,0,0,.06);
     }
- 
+
     .hint{
       font-size:12px; color:#8b94ae; text-align:center;
     }
- 
+
     @media (max-width:560px){
       .inputs{ gap:8px; }
       .inputs .group{ padding:10px 10px; }
@@ -191,7 +193,7 @@
       <div class="title">🏊‍♀️🚴🏃‍♂️Калькулятор темпа</div>
     </div>
     <div class="subtitle">Заполните любые два параметра — остальные посчитаются автоматически.</div>
- 
+
     <form id="calc" autocomplete="off">
       <!-- Дистанция -->
       <section class="field row-1">
@@ -202,7 +204,7 @@
           </div>
         </div>
       </section>
- 
+
       <!-- Время: ч:м:с -->
       <section class="field row-3">
         <label><span>⏱</span> Время (чч:мм:сс)</label>
@@ -218,7 +220,7 @@
           </div>
         </div>
       </section>
- 
+
       <!-- Темп 100м: м:с -->
       <section class="field row-2">
         <label><span>🏊‍♀️</span> Темп на 100м (мин:сек)</label>
@@ -230,7 +232,7 @@
           </div>
         </div>
       </section>
- 
+
       <!-- Темп км: м:с -->
       <section class="field row-2">
         <label><span>🏃‍♂️🚴</span> Темп на 1км (мин:сек)</label>
@@ -242,7 +244,7 @@
           </div>
         </div>
       </section>
- 
+
       <!-- Скорость км/ч -->
       <section class="field row-1">
         <label for="speed"><span>⚡</span> Скорость (км/ч)</label>
@@ -252,9 +254,9 @@
           </div>
         </div>
       </section>
- 
+
       <div id="msg" class="message" aria-live="polite"></div>
- 
+
       <div class="footer">
         <button type="button" class="btn" id="done">✅ Готово</button>
         <button type="button" class="btn btn-secondary" id="clear">🔄 Очистить</button>
@@ -262,11 +264,11 @@
       </div>
     </form>
   </main>
- 
+
   <script>
     // === URL backend'а, который принимает результат ===
     const BACKEND_URL = "https://pacecalculator-chernaletski.amvera.io/pace-result";
- 
+
     // Получаем query-параметры из URL: ?chat_id=...&message_id=...&user_id=...
     function getQueryParams() {
       const params = {};
@@ -279,13 +281,13 @@
       }
       return params;
     }
- 
+
     const tgContext = getQueryParams();
     console.log("Telegram context:", tgContext);
- 
+
     let isUpdating = false;
     let lastEdited = null; // 'D' | 'T' | 'P100' | 'PKM' | 'V'
- 
+
     const el = {
       distance: document.getElementById("distance"),
       hours: document.getElementById("hours"),
@@ -300,13 +302,13 @@
       done: document.getElementById("done"),
       clear: document.getElementById("clear"),
     };
- 
+
     const num = (v) => {
       if (v === "" || v === null || v === undefined) return null;
       const n = Number(v);
       return Number.isFinite(n) ? n : null;
     };
- 
+
     function sanitizeIntInput(input, min, max) {
       let v = input.value.trim();
       v = v.replace(/[^\d]/g, "");
@@ -324,7 +326,7 @@
       input.value = String(n);
       return n;
     }
- 
+
     function sanitizeDecimalInput(input, min) {
       let v = input.value.trim();
       if (!v) {
@@ -343,10 +345,10 @@
       if (min !== undefined && n < min) return null;
       return n;
     }
- 
+
     function readState() {
       const D = sanitizeDecimalInput(el.distance, 0);
- 
+
       const hhRaw = sanitizeIntInput(el.hours, 0, 999);
       const mmRaw = sanitizeIntInput(el.minutes, 0, 59);
       const ssRaw = sanitizeIntInput(el.seconds, 0, 59);
@@ -355,23 +357,23 @@
       const mm = mmRaw ?? 0;
       const ss = ssRaw ?? 0;
       const Tsec = hasAnyTime ? hh * 3600 + mm * 60 + ss : null;
- 
+
       const p100mRaw = sanitizeIntInput(el.p100_min, 0, 59);
       const p100sRaw = sanitizeIntInput(el.p100_sec, 0, 59);
       const hasP100 = p100mRaw !== null || p100sRaw !== null;
       const p100m = p100mRaw ?? 0;
       const p100s = p100sRaw ?? 0;
       const P100 = hasP100 ? p100m * 60 + p100s : null;
- 
+
       const pkmMRaw = sanitizeIntInput(el.pkm_min, 0, 59);
       const pkmSRaw = sanitizeIntInput(el.pkm_sec, 0, 59);
       const hasPKM = pkmMRaw !== null || pkmSRaw !== null;
       const pkmM = pkmMRaw ?? 0;
       const pkmS = pkmSRaw ?? 0;
       const PKM = hasPKM ? pkmM * 60 + pkmS : null;
- 
+
       const V = sanitizeDecimalInput(el.speed, 0);
- 
+
       return {
         D,
         Tsec,
@@ -385,7 +387,7 @@
         hasV: V !== null,
       };
     }
- 
+
     function setDistance(D) {
       if (el.distance === document.activeElement) return;
       el.distance.value = (D ?? 0).toFixed(2);
@@ -420,29 +422,29 @@
       if (el.speed === document.activeElement) return;
       el.speed.value = (V ?? 0).toFixed(2);
     }
- 
+
     function showMsg(text, type = "") {
       el.msg.textContent = text || "";
       el.msg.classList.remove("ok", "error");
       if (type) el.msg.classList.add(type);
     }
- 
+
     function compute() {
       if (isUpdating) return;
       isUpdating = true;
- 
+
       const s = readState();
       const count = ["hasD", "hasT", "hasP100", "hasPKM", "hasV"].reduce(
         (acc, k) => acc + (s[k] ? 1 : 0),
         0
       );
- 
+
       if (count < 2) {
         showMsg("Укажите минимум два параметра для расчёта.", "error");
         isUpdating = false;
         return;
       }
- 
+
       if (s.D !== null && s.D > 1000) {
         showMsg("Дистанция слишком большая (максимум 1000 км).", "error");
         isUpdating = false;
@@ -453,10 +455,10 @@
         isUpdating = false;
         return;
       }
- 
+
       let { D, Tsec: T, P100, PKM, V } = s;
       let solved = false;
- 
+
       function useDT() {
         if (s.hasD && s.hasT && s.D > 0 && s.Tsec > 0) {
           D = s.D;
@@ -527,7 +529,7 @@
           solved = true;
         }
       }
- 
+
       switch (lastEdited) {
         case "D":
           useDT();
@@ -602,7 +604,7 @@
           if (!solved) useTPKM();
           if (!solved) useTV();
       }
- 
+
       if (!solved) {
         if (s.hasPKM && !s.hasP100) {
           PKM = s.PKM;
@@ -636,7 +638,7 @@
           );
         }
       }
- 
+
       if (s.hasP100 && s.hasPKM) {
         const expectedPKM = s.P100 * 10;
         if (Math.abs(s.PKM - expectedPKM) > 2) {
@@ -647,7 +649,7 @@
           }
         }
       }
- 
+
       if (solved) {
         if (Number.isFinite(D)) setDistance(D);
         if (Number.isFinite(T)) setTime(T);
@@ -658,15 +660,15 @@
           showMsg("Расчёт выполнен успешно.", "ok");
         }
       }
- 
+
       isUpdating = false;
     }
- 
+
     function onEdit(category) {
       lastEdited = category;
       compute();
     }
- 
+
     el.distance.addEventListener("input", () => onEdit("D"));
     [el.hours, el.minutes, el.seconds].forEach((i) =>
       i.addEventListener("input", () => onEdit("T"))
@@ -678,7 +680,7 @@
       i.addEventListener("input", () => onEdit("PKM"))
     );
     el.speed.addEventListener("input", () => onEdit("V"));
- 
+
     el.clear.addEventListener("click", () => {
       isUpdating = true;
       [
@@ -696,7 +698,7 @@
       isUpdating = false;
       showMsg("");
     });
- 
+
     // Кнопка "Готово" — отправка результата на backend
     el.done.addEventListener("click", async () => {
       const s = readState();
@@ -708,25 +710,23 @@
         alert("Введите минимум два параметра перед отправкой.");
         return;
       }
- 
-      // chat_id: сначала из chat_id, если нет — берём user_id
+
+      // chat_id и user_id передаём раздельно, без подмены:
       const chatId =
         tgContext.chat_id && tgContext.chat_id !== "None"
           ? Number(tgContext.chat_id)
-          : tgContext.user_id && tgContext.user_id !== "None"
-          ? Number(tgContext.user_id)
           : null;
- 
+
       const messageId =
         tgContext.message_id && tgContext.message_id !== "None"
           ? Number(tgContext.message_id)
           : null;
- 
+
       const userId =
         tgContext.user_id && tgContext.user_id !== "None"
           ? Number(tgContext.user_id)
           : null;
- 
+
       const result = {
         distanceKm: s.D ?? null,
         time: (() => {
@@ -762,9 +762,9 @@
         message_id: messageId,
         user_id: userId,
       };
- 
+
       console.log("Отправка результата на backend:", result);
- 
+
       try {
         const resp = await fetch(BACKEND_URL, {
           method: "POST",
@@ -773,23 +773,43 @@
           },
           body: JSON.stringify(result),
         });
- 
+
         if (!resp.ok) {
           throw new Error("HTTP " + resp.status);
         }
- 
+
         const data = await resp.json().catch(() => ({}));
         console.log("Ответ backend:", data);
- 
-        alert("Результат отправлен в чат ✅");
+
+        if (data && data.status === "ok") {
+          // Пытаемся корректно закрыть WebView в Telegram:
+          if (
+            window.Telegram &&
+            window.Telegram.WebApp &&
+            typeof window.Telegram.WebApp.close === "function"
+          ) {
+            // Mini App API
+            window.Telegram.WebApp.close(); // Bot API 6.0+ [web:22]
+          } else if (
+            typeof window.TelegramGameProxy !== "undefined" &&
+            typeof window.TelegramGameProxy.close === "function"
+          ) {
+            // Старый Games API (если доступен)
+            window.TelegramGameProxy.close();
+          } else {
+            // Фолбэк, если по какой-то причине API нет
+            alert("Результат отправлен в чат ✅");
+          }
+        } else {
+          alert("Не удалось отправить результат. Попробуйте ещё раз позже.");
+        }
       } catch (e) {
         console.error("Ошибка отправки на backend:", e);
         alert("Не удалось отправить результат. Попробуйте ещё раз позже.");
       }
     });
- 
+
     compute();
   </script>
 </body>
 </html>
-
