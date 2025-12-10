@@ -267,7 +267,7 @@
     // === URL backend'а, который принимает результат ===
     const BACKEND_URL = "https://pacecalculator-chernaletski.amvera.io/pace-result";
 
-    // Получаем query-параметры из URL: ?chat_id=...&message_id=...&user_id=...
+    // Получаем query-параметры из URL: ?inline_message_id=...&user_id=...&...
     function getQueryParams() {
       const params = {};
       const query = window.location.search.substring(1);
@@ -282,6 +282,13 @@
 
     const tgContext = getQueryParams();
     console.log("Telegram context:", tgContext);
+
+    // Для setGameScore нам важны inline_message_id и user_id [web:441]
+    const inlineMessageId = tgContext.inline_message_id || null;
+    const userId =
+      tgContext.user_id && tgContext.user_id !== "None"
+        ? Number(tgContext.user_id)
+        : null;
 
     let isUpdating = false;
     let lastEdited = null; // 'D' | 'T' | 'P100' | 'PKM' | 'V'
@@ -697,11 +704,43 @@
       showMsg("");
     });
 
+    // Вычисление числового score для setGameScore:
+    // берём скорость (км/ч) * 100, чтобы получить целое число, чем быстрее — тем лучше.
+    function computeScoreFromState(state) {
+      if (state.V !== null && Number.isFinite(state.V) && state.V > 0) {
+        return Math.round(state.V * 100);
+      }
+      if (state.PKM !== null && Number.isFinite(state.PKM) && state.PKM > 0) {
+        const v = 3600 / state.PKM;
+        return Math.round(v * 100);
+      }
+      if (state.P100 !== null && Number.isFinite(state.P100) && state.P100 > 0) {
+        const v = 3600 / (state.P100 * 10);
+        return Math.round(v * 100);
+      }
+      return 0;
+    }
+
+    function closeGameWebView() {
+      // Для HTML5-игр через games.js [web:441][web:585]
+      if (window.TelegramGameProxy && typeof TelegramGameProxy.close === "function") {
+        TelegramGameProxy.close();
+        return;
+      }
+      // На всякий случай пробуем Mini Apps API
+      if (window.Telegram && Telegram.WebApp && typeof Telegram.WebApp.close === "function") {
+        Telegram.WebApp.close();
+        return;
+      }
+      // Фолбэк
+      alert("Результат сохранён. Можно закрыть окно.");
+    }
+
     // Кнопка "Готово" — отправка результата на backend
     el.done.addEventListener("click", async () => {
-      const s = readState();
+      const initialState = readState();
       const count = ["hasD", "hasT", "hasP100", "hasPKM", "hasV"].reduce(
-        (acc, k) => acc + (s[k] ? 1 : 0),
+        (acc, k) => acc + (initialState[k] ? 1 : 0),
         0
       );
       if (count < 2) {
@@ -709,58 +748,32 @@
         return;
       }
 
-      // chat_id: сначала из chat_id, если нет — берём user_id
-      const chatId =
-        tgContext.chat_id && tgContext.chat_id !== "None"
-          ? Number(tgContext.chat_id)
-          : tgContext.user_id && tgContext.user_id !== "None"
-          ? Number(tgContext.user_id)
-          : null;
+      if (!inlineMessageId || !userId) {
+        alert("Не удалось определить данные игры. Попробуйте запустить игру ещё раз из чата.");
+        return;
+      }
 
-      const messageId =
-        tgContext.message_id && tgContext.message_id !== "None"
-          ? Number(tgContext.message_id)
-          : null;
+      // Убедимся, что все значения пересчитаны и поля синхронизированы
+      compute();
+      const state = readState();
 
-      const userId =
-        tgContext.user_id && tgContext.user_id !== "None"
-          ? Number(tgContext.user_id)
-          : null;
+      const score = computeScoreFromState(state);
+      console.log("Вычисленный score:", score);
+
+      const payload = {
+        distanceKm: state.D ?? null,
+        timeSeconds: state.Tsec ?? null,
+        pace100mSeconds: state.P100 ?? null,
+        pacePerKmSeconds: state.PKM ?? null,
+        speedKmh: state.V ?? null,
+        timestamp: new Date().toISOString(),
+      };
 
       const result = {
-        distanceKm: s.D ?? null,
-        time: (() => {
-          if (!s.hasT) return null;
-          const t = s.Tsec;
-          const hh = Math.floor(t / 3600);
-          const mm = Math.floor((t % 3600) / 60);
-          const ss = t % 60;
-          return {
-            hours: hh,
-            minutes: mm,
-            seconds: ss,
-            totalSeconds: t,
-          };
-        })(),
-        pace100m: s.hasP100
-          ? {
-              minutes: Math.floor(s.P100 / 60),
-              seconds: s.P100 % 60,
-              totalSeconds: s.P100,
-            }
-          : null,
-        pacePerKm: s.hasPKM
-          ? {
-              minutes: Math.floor(s.PKM / 60),
-              seconds: s.PKM % 60,
-              totalSeconds: s.PKM,
-            }
-          : null,
-        speedKmh: s.V ?? null,
-        timestamp: new Date().toISOString(),
-        chat_id: chatId,
-        message_id: messageId,
+        inline_message_id: inlineMessageId,
         user_id: userId,
+        score,
+        payload,
       };
 
       console.log("Отправка результата на backend:", result);
@@ -781,7 +794,7 @@
         const data = await resp.json().catch(() => ({}));
         console.log("Ответ backend:", data);
 
-        alert("Результат отправлен в чат ✅");
+        closeGameWebView();
       } catch (e) {
         console.error("Ошибка отправки на backend:", e);
         alert("Не удалось отправить результат. Попробуйте ещё раз позже.");
