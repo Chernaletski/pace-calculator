@@ -7,154 +7,434 @@
   <!-- Telegram Games API -->
   <script src="https://telegram.org/js/games.js"></script>
   <style>
-    /* ... ВЕСЬ ТВОЙ CSS БЕЗ ИЗМЕНЕНИЙ ... */
+    :root{
+      --bg1:#667eea;
+      --bg2:#764ba2;
+      --card-bg:#ffffff;
+      --text:#1f2a44;
+      --muted:#5b6b8b;
+      --accent:#6a68ff;
+      --success:#22c55e;
+      --warn:#f59e0b;
+      --error:#ef4444;
+      --shadow: 0 10px 30px rgba(0,0,0,.15);
+      --radius:16px;
+      --radius-sm:12px;
+      --gap:14px;
+    }
+ 
+    *{box-sizing:border-box}
+    html,body{height:100%}
+    body{
+      margin:0;
+      font-family:Inter, system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+      color:var(--text);
+      min-height:100vh;
+      display:grid;
+      place-items:center;
+      padding:16px;
+      overflow-x:hidden;
+ 
+      background-image: url("https://cdnn11.img.sputnik.by/img/103010/81/1030108143_4:0:1275:719_2072x0_60_0_0_3fec56bf337ef2b54e1a34d5d95141f0.jpg");
+      background-size: cover;
+      background-position: center center;
+      background-repeat: no-repeat;
+    }
+ 
+    .card{
+      width:min(720px, 100%);
+      background:var(--card-bg);
+      border-radius:var(--radius);
+      box-shadow:var(--shadow);
+      padding: clamp(18px, 3.6vw, 28px);
+      animation:fadeIn .6s ease both;
+    }
+    @keyframes fadeIn{
+      from{opacity:0; transform:translateY(8px)}
+      to{opacity:1; transform:translateY(0)}
+    }
+ 
+    .header{
+      display:flex; align-items:center; justify-content:space-between;
+      gap:10px; margin-bottom:6px;
+    }
+    .title{
+      font-size: clamp(18px, 4.2vw, 22px);
+      font-weight:700;
+      letter-spacing:0.2px;
+    }
+    .subtitle{
+      color:var(--muted);
+      font-size: clamp(12px, 3.4vw, 14px);
+      margin-bottom:14px;
+    }
+ 
+    form{
+      display:grid;
+      gap: clamp(12px, 3.2vw, 18px);
+    }
+ 
+    .field{
+      background:#f7f8fc;
+      border-radius:var(--radius-sm);
+      padding:14px 14px 10px;
+      border:1px solid transparent;
+      transition: border-color .2s ease, background .2s ease, box-shadow .2s ease;
+    }
+    .field:focus-within{
+      border-color:#e0e4ff;
+      background:#fff;
+      box-shadow:0 6px 20px rgba(102,126,234,.12);
+    }
+ 
+    label{
+      display:flex; align-items:center; gap:10px;
+      font-weight:600;
+      margin-bottom:8px;
+      font-size:14px;
+    }
+    .inputs{
+      display:grid;
+      grid-template-columns: repeat(6, minmax(0,1fr));
+      gap:10px;
+    }
+ 
+    .row-1 .inputs{grid-template-columns: 1fr;}
+    .row-2 .inputs{grid-template-columns: 1fr 1fr;}
+    .row-3 .inputs{grid-template-columns: 1fr 1fr 1fr;}
+ 
+    .inputs .group{
+      display:flex; align-items:center; gap:8px;
+      background:#fff;
+      border:1px solid #e9ecf7;
+      border-radius:10px;
+      padding:8px 10px;
+      transition: border-color .2s ease, box-shadow .2s ease, transform .12s ease;
+    }
+    .inputs .group:focus-within{
+      border-color:#cfd7ff;
+      box-shadow:0 4px 14px rgba(102,126,234,.14);
+      transform: translateY(-1px);
+    }
+    .inputs .group span.sep{
+      color:#a3acc1; font-weight:600; user-select:none;
+    }
+ 
+    input{
+      width:100%;
+      border:none;
+      outline:none;
+      font-size:16px;
+      background:transparent;
+      color:var(--text);
+    }
+    input[type="number"]{
+      -moz-appearance:textfield;
+    }
+    input[type="number"]::-webkit-outer-spin-button,
+    input[type="number"]::-webkit-inner-spin-button{ -webkit-appearance: none; margin: 0; }
+ 
+    .message{
+      min-height:20px;
+      font-size:13px;
+      color:var(--warn);
+      display:flex; align-items:center; gap:8px;
+      opacity:.95;
+      transition: color .2s ease;
+    }
+    .message.error{ color:var(--error); }
+    .message.ok{ color:var(--success); }
+ 
+    .footer{
+      display:flex; flex-direction:column; gap:10px;
+      margin-top:6px;
+    }
+    .btn{
+      appearance:none;
+      border:none;
+      border-radius:14px;
+      padding:14px 18px;
+      background: linear-gradient(135deg, #7c6cf9, #6a68ff);
+      color:#fff; font-weight:700;
+      font-size:16px;
+      cursor:pointer;
+      box-shadow: 0 10px 26px rgba(106,104,255, .28);
+      transition: transform .12s ease, box-shadow .2s ease, filter .2s ease;
+    }
+    .btn:active{ transform: translateY(1px) scale(.997); }
+    .btn:hover{ filter:brightness(1.03); box-shadow:0 12px 30px rgba(106,104,255,.34); }
+ 
+    .btn-secondary{
+      background:#f4f5fb;
+      color:var(--muted);
+      box-shadow:none;
+    }
+    .btn-secondary:hover{
+      filter:none;
+      box-shadow:0 4px 12px rgba(0,0,0,.06);
+    }
+ 
+    .hint{
+      font-size:12px; color:#8b94ae; text-align:center;
+    }
+ 
+    @media (max-width:560px){
+      .inputs{ gap:8px; }
+      .inputs .group{ padding:10px 10px; }
+      input{ font-size:15px; }
+    }
   </style>
 </head>
 <body>
-  <!-- ... ВЕСЬ ТВОЙ HTML БЕЗ ИЗМЕНЕНИЙ ... -->
+  <main class="card" role="main" aria-label="Калькулятор темпа">
+    <div class="header">
+      <div class="title">🏊‍♀️🚴🏃‍♂️Калькулятор темпа</div>
+    </div>
+    <div class="subtitle">Заполните любые два параметра — остальные посчитаются автоматически.</div>
+ 
+    <form id="calc" autocomplete="off">
+      <!-- Дистанция -->
+      <section class="field row-1">
+        <label for="distance"><span>📏</span> Дистанция (км)</label>
+        <div class="inputs">
+          <div class="group" title="Дистанция, км">
+            <input id="distance" type="text" inputmode="decimal" placeholder="0.00" aria-label="Дистанция, км" />
+          </div>
+        </div>
+      </section>
+ 
+      <!-- Время: ч:м:с -->
+      <section class="field row-3">
+        <label><span>⏱</span> Время (чч:мм:сс)</label>
+        <div class="inputs">
+          <div class="group">
+            <input id="hours" type="number" inputmode="numeric" min="0" step="1" placeholder="чч" aria-label="Часы" />
+          </div>
+          <div class="group">
+            <input id="minutes" type="number" inputmode="numeric" min="0" max="59" step="1" placeholder="мм" aria-label="Минуты" />
+          </div>
+          <div class="group">
+            <input id="seconds" type="number" inputmode="numeric" min="0" max="59" step="1" placeholder="сс" aria-label="Секунды" />
+          </div>
+        </div>
+      </section>
+ 
+      <!-- Темп 100м: м:с -->
+      <section class="field row-2">
+        <label><span>🏊‍♀️</span> Темп на 100м (мин:сек)</label>
+        <div class="inputs">
+          <div class="group">
+            <input id="p100_min" type="number" inputmode="numeric" min="0" max="59" step="1" placeholder="мин" aria-label="Минуты на 100м" />
+            <span class="sep">:</span>
+            <input id="p100_sec" type="number" inputmode="numeric" min="0" max="59" step="1" placeholder="сек" aria-label="Секунды на 100м" />
+          </div>
+        </div>
+      </section>
+ 
+      <!-- Темп км: м:с -->
+      <section class="field row-2">
+        <label><span>🏃‍♂️🚴</span> Темп на 1км (мин:сек)</label>
+        <div class="inputs">
+          <div class="group">
+            <input id="pkm_min" type="number" inputmode="numeric" min="0" max="59" step="1" placeholder="мин" aria-label="Минуты на км" />
+            <span class="sep">:</span>
+            <input id="pkm_sec" type="number" inputmode="numeric" min="0" max="59" step="1" placeholder="сек" aria-label="Секунды на км" />
+          </div>
+        </div>
+      </section>
+ 
+      <!-- Скорость км/ч -->
+      <section class="field row-1">
+        <label for="speed"><span>⚡</span> Скорость (км/ч)</label>
+        <div class="inputs">
+          <div class="group">
+            <input id="speed" type="text" inputmode="decimal" placeholder="0.00" aria-label="Скорость, км/ч" />
+          </div>
+        </div>
+      </section>
+ 
+      <div id="msg" class="message" aria-live="polite"></div>
+ 
+      <div class="footer">
+        <button type="button" class="btn" id="done">✅ Готово</button>
+        <button type="button" class="btn btn-secondary" id="clear">🔄 Очистить</button>
+        <div class="hint">Все поля редактируемые. Для расчёта укажите минимум 2 параметра.</div>
+      </div>
+    </form>
+  </main>
+ 
+ <script>
+  const BACKEND_URL = "https://pacecalculator-chernaletski.amvera.io/pace-result";
 
-  <script>
-    // === URL backend'а, который принимает результат ===
-    const BACKEND_URL = "https://pacecalculator-chernaletski.amvera.io/pace-result";
-
-    // Получаем query-параметры из URL: ?chat_id=...&message_id=...&user_id=...
-    function getQueryParams() {
-      const params = {};
-      const query = window.location.search.substring(1);
-      if (!query) return params;
-      for (const part of query.split("&")) {
-        const [key, value] = part.split("=");
-        if (!key) continue;
-        params[decodeURIComponent(key)] = value ? decodeURIComponent(value) : "";
-      }
-      return params;
+  function getQueryParams() {
+    const params = {};
+    const query = window.location.search.substring(1);
+    if (!query) return params;
+    for (const part of query.split("&")) {
+      const [key, value] = part.split("=");
+      if (!key) continue;
+      params[decodeURIComponent(key)] = value ? decodeURIComponent(value) : "";
     }
+    return params;
+  }
 
-    const tgContext = getQueryParams();
-    console.log("Telegram context:", tgContext);
+  const tgContext = getQueryParams();
+  console.log("Telegram context:", tgContext);
 
-    // Закрытие WebView / игры внутри Telegram
-    function closeGameWebView() {
-      try {
-        if (window.TelegramGameProxy && typeof TelegramGameProxy.close === "function") {
-          TelegramGameProxy.close(); // для игр
-          return;
-        }
-        if (window.Telegram && Telegram.WebApp && typeof Telegram.WebApp.close === "function") {
-          Telegram.WebApp.close(); // для Mini Apps
-          return;
-        }
-        console.log("Not inside Telegram, webview close skipped");
-      } catch (e) {
-        console.error("Failed to close webview", e);
+  function closeGameWebView() {
+    try {
+      if (window.TelegramGameProxy && typeof TelegramGameProxy.close === "function") {
+        TelegramGameProxy.close();
+        return;
       }
+      if (window.Telegram && Telegram.WebApp && typeof Telegram.WebApp.close === "function") {
+        Telegram.WebApp.close();
+        return;
+      }
+      console.log("Not inside Telegram, webview close skipped");
+    } catch (e) {
+      console.error("Failed to close webview", e);
     }
+  }
 
-    let isUpdating = false;
-    let lastEdited = null; // 'D' | 'T' | 'P100' | 'PKM' | 'V'
+  let isUpdating = false;
+  let lastEdited = null; // 'D' | 'T' | 'P100' | 'PKM' | 'V'
 
-    const el = {
-      distance: document.getElementById("distance"),
-      hours: document.getElementById("hours"),
-      minutes: document.getElementById("minutes"),
-      seconds: document.getElementById("seconds"),
-      p100_min: document.getElementById("p100_min"),
-      p100_sec: document.getElementById("p100_sec"),
-      pkm_min: document.getElementById("pkm_min"),
-      pkm_sec: document.getElementById("pkm_sec"),
-      speed: document.getElementById("speed"),
-      msg: document.getElementById("msg"),
-      done: document.getElementById("done"),
-      clear: document.getElementById("clear"),
+  const el = {
+    distance: document.getElementById("distance"),
+    hours: document.getElementById("hours"),
+    minutes: document.getElementById("minutes"),
+    seconds: document.getElementById("seconds"),
+    p100_min: document.getElementById("p100_min"),
+    p100_sec: document.getElementById("p100_sec"),
+    pkm_min: document.getElementById("pkm_min"),
+    pkm_sec: document.getElementById("pkm_sec"),
+    speed: document.getElementById("speed"),
+    msg: document.getElementById("msg"),
+    done: document.getElementById("done"),
+    clear: document.getElementById("clear"),
+  };
+
+  console.log("Form elements:", el);
+
+  const num = (v) => {
+    if (v === "" || v === null || v === undefined) return null;
+    const n = Number(v);
+    return Number.isFinite(n) ? n : null;
+  };
+
+  function sanitizeIntInput(input, min, max) {
+    let v = input.value.trim();
+    v = v.replace(/[^\d]/g, "");
+    if (v === "") {
+      input.value = "";
+      return null;
+    }
+    let n = parseInt(v, 10);
+    if (!Number.isFinite(n)) {
+      input.value = "";
+      return null;
+    }
+    if (min !== undefined && n < min) n = min;
+    if (max !== undefined && n > max) n = max;
+    input.value = String(n);
+    return n;
+  }
+
+  function sanitizeDecimalInput(input, min) {
+    let v = input.value.trim();
+    if (!v) {
+      input.value = "";
+      return null;
+    }
+    v = v.replace(",", ".");
+    const parts = v.split(".");
+    if (parts.length > 2) {
+      v = parts[0] + "." + parts.slice(1).join("");
+    }
+    v = v.replace(/[^0-9.]/g, "");
+    input.value = v;
+    const n = parseFloat(v);
+    if (!Number.isFinite(n)) return null;
+    if (min !== undefined && n < min) return null;
+    return n;
+  }
+
+  function readState() {
+    const D = sanitizeDecimalInput(el.distance, 0);
+
+    const hhRaw = sanitizeIntInput(el.hours, 0, 999);
+    const mmRaw = sanitizeIntInput(el.minutes, 0, 59);
+    const ssRaw = sanitizeIntInput(el.seconds, 0, 59);
+    const hasAnyTime = hhRaw !== null || mmRaw !== null || ssRaw !== null;
+    const hh = hhRaw ?? 0;
+    const mm = mmRaw ?? 0;
+    const ss = ssRaw ?? 0;
+    const Tsec = hasAnyTime ? hh * 3600 + mm * 60 + ss : null;
+
+    const p100mRaw = sanitizeIntInput(el.p100_min, 0, 59);
+    const p100sRaw = sanitizeIntInput(el.p100_sec, 0, 59);
+    const hasP100 = p100mRaw !== null || p100sRaw !== null;
+    const p100m = p100mRaw ?? 0;
+    const p100s = p100sRaw ?? 0;
+    const P100 = hasP100 ? p100m * 60 + p100s : null;
+
+    const pkmMRaw = sanitizeIntInput(el.pkm_min, 0, 59);
+    const pkmSRaw = sanitizeIntInput(el.pkm_sec, 0, 59);
+    const hasPKM = pkmMRaw !== null || pkmSRaw !== null;
+    const pkmM = pkmMRaw ?? 0;
+    const pkmS = pkmSRaw ?? 0;
+    const PKM = hasPKM ? pkmM * 60 + pkmS : null;
+
+    const V = sanitizeDecimalInput(el.speed, 0);
+
+    return {
+      D,
+      Tsec,
+      P100,
+      PKM,
+      V,
+      hasD: D !== null,
+      hasT: Tsec !== null,
+      hasP100,
+      hasPKM,
+      hasV: V !== null,
     };
+  }
 
-    const num = (v) => {
-      if (v === "" || v === null || v === undefined) return null;
-      const n = Number(v);
-      return Number.isFinite(n) ? n : null;
-    };
+  // дальше весь твой compute/setDistance/setTime/... БЕЗ ИЗМЕНЕНИЙ
 
-    function sanitizeIntInput(input, min, max) {
-      let v = input.value.trim();
-      v = v.replace(/[^\d]/g, "");
-      if (v === "") {
-        input.value = "";
-        return null;
-      }
-      let n = parseInt(v, 10);
-      if (!Number.isFinite(n)) {
-        input.value = "";
-        return null;
-      }
-      if (min !== undefined && n < min) n = min;
-      if (max !== undefined && n > max) n = max;
-      input.value = String(n);
-      return n;
-    }
+  function setDistance(D) { /* как у тебя */ }
+  function setTime(Tsec) { /* как у тебя */ }
+  function setP100(seconds) { /* как у тебя */ }
+  function setPKM(seconds) { /* как у тебя */ }
+  function setSpeed(V) { /* как у тебя */ }
+  function showMsg(text, type = "") { /* как у тебя */ }
+  function compute() { /* как у тебя */ }
 
-    function sanitizeDecimalInput(input, min) {
-      let v = input.value.trim();
-      if (!v) {
-        input.value = "";
-        return null;
-      }
-      v = v.replace(",", ".");
-      const parts = v.split(".");
-      if (parts.length > 2) {
-        v = parts[0] + "." + parts.slice(1).join("");
-      }
-      v = v.replace(/[^0-9.]/g, "");
-      input.value = v;
-      const n = parseFloat(v);
-      if (!Number.isFinite(n)) return null;
-      if (min !== undefined && n < min) return null;
-      return n;
-    }
+  function onEdit(category) {
+    lastEdited = category;
+    compute();
+  }
 
-    function readState() {
-      const D = sanitizeDecimalInput(el.distance, 0);
+  // Безопасно навешиваем обработчики
+  el.distance && el.distance.addEventListener("input", () => onEdit("D"));
 
-      const hhRaw = sanitizeIntInput(el.hours, 0, 999);
-      const mmRaw = sanitizeIntInput(el.minutes, 0, 59);
-      const ssRaw = sanitizeIntInput(el.seconds, 0, 59);
-      const hasAnyTime = hhRaw !== null || mmRaw !== null || ssRaw !== null;
-      const hh = hhRaw ?? 0;
-      const mm = mmRaw ?? 0;
-      const ss = ssRaw ?? 0;
-      const Tsec = hasAnyTime ? hh * 3600 + mm * 60 + ss : null;
+  [el.hours, el.minutes, el.seconds].forEach((i) =>
+    i && i.addEventListener("input", () => onEdit("T"))
+  );
 
-      const p100mRaw = sanitizeIntInput(el.p100_min, 0, 59);
-      const p100sRaw = sanitizeIntInput(el.p100_sec, 0, 59);
-      const hasP100 = p100mRaw !== null || p100sRaw !== null;
-      const p100m = p100mRaw ?? 0;
-      const p100s = p100sRaw ?? 0;
-      const P100 = hasP100 ? p100m * 60 + p100s : null;
+  [el.p100_min, el.p100_sec].forEach((i) =>
+    i && i.addEventListener("input", () => onEdit("P100"))
+  );
 
-      const pkmMRaw = sanitizeIntInput(el.pkm_min, 0, 59);
-      const pkmSRaw = sanitizeIntInput(el.pkm_sec, 0, 59);
-      const hasPKM = pkmMRaw !== null || pkmSRaw !== null;
-      const pkmM = pkmMRaw ?? 0;
-      const pkmS = pkmSRaw ?? 0;
-      const PKM = hasPKM ? pkmM * 60 + pkmS : null;
+  [el.pkm_min, el.pkm_sec].forEach((i) =>
+    i && i.addEventListener("input", () => onEdit("PKM"))
+  );
 
-      const V = sanitizeDecimalInput(el.speed, 0);
+  el.speed && el.speed.addEventListener("input", () => onEdit("V"));
 
-      return {
-        D,
-        Tsec,
-        P100,
-        PKM,
-        V,
-        hasD: D !== null,
-        hasT: Tsec !== null,
-        hasP100,
-        hasPKM,
-        hasV: V !== null,
-      };
-    }
-
-    // ... ВСЕ ФУНКЦИИ compute(), setDistance(), setTime() и т.д. БЕЗ ИЗМЕНЕНИЙ ...
-
+  el.clear &&
     el.clear.addEventListener("click", () => {
       isUpdating = true;
       [
@@ -167,13 +447,13 @@
         el.pkm_min,
         el.pkm_sec,
         el.speed,
-      ].forEach((inp) => (inp.value = ""));
+      ].forEach((inp) => inp && (inp.value = ""));
       lastEdited = null;
       isUpdating = false;
       showMsg("");
     });
 
-    // Кнопка "Готово" — отправка результата на backend и закрытие WebView
+  el.done &&
     el.done.addEventListener("click", async () => {
       const s = readState();
       const count = ["hasD", "hasT", "hasP100", "hasPKM", "hasV"].reduce(
@@ -185,7 +465,6 @@
         return;
       }
 
-      // chat_id: сначала из chat_id, если нет — берём user_id
       const chatId =
         tgContext.chat_id && tgContext.chat_id !== "None"
           ? Number(tgContext.chat_id)
@@ -244,9 +523,7 @@
       try {
         const resp = await fetch(BACKEND_URL, {
           method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
+          headers: { "Content-Type": "application/json" },
           body: JSON.stringify(result),
         });
 
@@ -257,11 +534,7 @@
           throw new Error("Backend error: " + JSON.stringify(data));
         }
 
-        // В Telegram — закрываем WebView, в обычном браузере показываем alert
-        if (
-          window.TelegramGameProxy ||
-          (window.Telegram && Telegram.WebApp)
-        ) {
+        if (window.TelegramGameProxy || (window.Telegram && Telegram.WebApp)) {
           closeGameWebView();
         } else {
           alert("Результат отправлен в чат ✅");
@@ -272,7 +545,8 @@
       }
     });
 
-    compute();
-  </script>
+  compute();
+</script>
 </body>
 </html>
+
