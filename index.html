@@ -198,7 +198,6 @@
         <label for="distance"><span>📏</span> Дистанция (км)</label>
         <div class="inputs">
           <div class="group" title="Дистанция, км">
-            <!-- text + inputmode=decimal позволяет вводить 0,8 на мобилках -->
             <input id="distance" type="text" inputmode="decimal" placeholder="0.00" aria-label="Дистанция, км" />
           </div>
         </div>
@@ -249,7 +248,6 @@
         <label for="speed"><span>⚡</span> Скорость (км/ч)</label>
         <div class="inputs">
           <div class="group">
-            <!-- тоже text + decimal для нормального ввода 10,5 -->
             <input id="speed" type="text" inputmode="decimal" placeholder="0.00" aria-label="Скорость, км/ч" />
           </div>
         </div>
@@ -266,6 +264,25 @@
   </main>
 
   <script>
+    // === URL backend'а, который принимает результат ===
+    const BACKEND_URL = "http://127.0.0.1:8000/pace-result"; // TODO: заменить на реальный HTTPS-URL
+
+    // Получаем query-параметры из URL: ?chat_id=...&message_id=...&user_id=...
+    function getQueryParams() {
+      const params = {};
+      const query = window.location.search.substring(1);
+      if (!query) return params;
+      for (const part of query.split("&")) {
+        const [key, value] = part.split("=");
+        if (!key) continue;
+        params[decodeURIComponent(key)] = value ? decodeURIComponent(value) : "";
+      }
+      return params;
+    }
+
+    const tgContext = getQueryParams();
+    console.log("Telegram context:", tgContext);
+
     let isUpdating = false;
     let lastEdited = null; // 'D' | 'T' | 'P100' | 'PKM' | 'V'
 
@@ -308,7 +325,6 @@
       return n;
     }
 
-    // decimal-поля: поддержка "0,8", "0.8", очищаем лишние символы
     function sanitizeDecimalInput(input, min){
       let v = input.value.trim();
       if (!v){
@@ -642,7 +658,8 @@
       showMsg('');
     });
 
-    el.done.addEventListener('click', () => {
+    // Кнопка "Готово" — отправка результата на backend
+    el.done.addEventListener('click', async () => {
       const s = readState();
       const count = ['hasD','hasT','hasP100','hasPKM','hasV']
         .reduce((acc,k)=>acc + (s[k]?1:0), 0);
@@ -670,25 +687,34 @@
           totalSeconds: s.PKM
         } : null,
         speedKmh: s.V ?? null,
-        timestamp: new Date().toISOString()
+        timestamp: new Date().toISOString(),
+        chat_id: tgContext.chat_id || null,
+        message_id: tgContext.message_id || null,
+        user_id: tgContext.user_id || null
       };
 
-      console.log('Готово. Данные к отправке:', result);
-      alert(
-        'Результаты:\n' +
-        (result.distanceKm != null ? `Дистанция: ${result.distanceKm.toFixed(2)} км\n` : '') +
-        (result.time ? `Время: ${result.time.hours}ч ${result.time.minutes}м ${result.time.seconds}с\n` : '') +
-        (result.pace100m ? `Темп 100м: ${result.pace100m.minutes}м ${result.pace100m.seconds}с\n` : '') +
-        (result.pacePerKm ? `Темп км: ${result.pacePerKm.minutes}м ${result.pacePerKm.seconds}с\n` : '') +
-        (result.speedKmh != null ? `Скорость: ${result.speedKmh.toFixed(2)} км/ч` : '')
-      );
+      console.log('Отправка результата на backend:', result);
 
       try {
-        if (window.TelegramGameProxy && typeof TelegramGameProxy.shareScore === 'function') {
-          TelegramGameProxy.shareScore();
+        const resp = await fetch(BACKEND_URL, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify(result)
+        });
+
+        if (!resp.ok) {
+          throw new Error('HTTP ' + resp.status);
         }
-      } catch(e){
-        console.error('Ошибка при вызове TelegramGameProxy.shareScore:', e);
+
+        const data = await resp.json().catch(() => ({}));
+        console.log('Ответ backend:', data);
+
+        alert('Результат отправлен в чат ✅');
+      } catch (e) {
+        console.error('Ошибка отправки на backend:', e);
+        alert('Не удалось отправить результат. Попробуйте ещё раз позже.');
       }
     });
 
