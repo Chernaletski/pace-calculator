@@ -6,6 +6,8 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <!-- Telegram Mini Apps API -->
   <script src="https://telegram.org/js/telegram-web-app.js"></script>
+  <!-- (можно оставить Games API, он не мешает работе Mini App, но не обязателен) -->
+  <script src="https://telegram.org/js/games.js"></script>
   <style>
     :root{
       --bg1:#667eea;
@@ -264,9 +266,11 @@
   </main>
 
   <script>
-    // === Telegram Mini App контекст ===
-    const tg = window.Telegram && window.Telegram.WebApp ? window.Telegram.WebApp : null;
+    // === URL backend'а, который принимает результат ===
+    const BACKEND_URL = "https://pacecalculator-chernaletski.amvera.io/pace-result";
 
+    // Telegram Mini App объект (если открыт внутри Telegram)
+    const tg = window.Telegram && window.Telegram.WebApp ? window.Telegram.WebApp : null;
     if (tg) {
       tg.ready();
       if (typeof tg.expand === "function") {
@@ -274,26 +278,25 @@
       }
     }
 
-    // chat_id / user_id берём из initDataUnsafe, а не из query-параметров
-    let initialChatId = null;
-    let initialUserId = null;
-
-    if (tg && tg.initDataUnsafe) {
-      if (tg.initDataUnsafe.chat && typeof tg.initDataUnsafe.chat.id === "number") {
-        initialChatId = tg.initDataUnsafe.chat.id;
+    // Получаем query-параметры из URL: ?chat_id=...&message_id=...&user_id=...
+    // (оставляем как fallback для открытия в обычном браузере)
+    function getQueryParams() {
+      const params = {};
+      const query = window.location.search.substring(1);
+      if (!query) return params;
+      for (const part of query.split("&")) {
+        const [key, value] = part.split("=");
+        if (!key) continue;
+        params[decodeURIComponent(key)] = value ? decodeURIComponent(value) : "";
       }
-      if (tg.initDataUnsafe.user && typeof tg.initDataUnsafe.user.id === "number") {
-        initialUserId = tg.initDataUnsafe.user.id;
-      }
-      // на всякий случай: если есть только user — будем использовать его
-      if (!initialChatId && initialUserId) {
-        initialChatId = null;
-      }
-      console.log("initDataUnsafe:", tg.initDataUnsafe);
+      return params;
     }
 
-    // === URL backend'а, который принимает результат ===
-    const BACKEND_URL = "https://pacecalculator-chernaletski.amvera.io/pace-result";
+    const tgContext = getQueryParams();
+    console.log("Telegram context (query):", tgContext);
+    if (tg && tg.initDataUnsafe) {
+      console.log("initDataUnsafe:", tg.initDataUnsafe);
+    }
 
     let isUpdating = false;
     let lastEdited = null; // 'D' | 'T' | 'P100' | 'PKM' | 'V'
@@ -709,7 +712,7 @@
       showMsg("");
     });
 
-    // Кнопка "Готово" — отправка результата на backend и закрытие Mini App
+    // Кнопка "Готово" — отправка результата на backend + закрытие Mini App
     el.done.addEventListener("click", async () => {
       const s = readState();
       const count = ["hasD", "hasT", "hasP100", "hasPKM", "hasV"].reduce(
@@ -717,3 +720,110 @@
         0
       );
       if (count < 2) {
+        alert("Введите минимум два параметра перед отправкой.");
+        return;
+      }
+
+      // 1) Пытаемся взять chat_id / user_id из Mini App initDataUnsafe
+      let chatId = null;
+      let userId = null;
+
+      if (tg && tg.initDataUnsafe) {
+        if (
+          tg.initDataUnsafe.chat &&
+          typeof tg.initDataUnsafe.chat.id === "number"
+        ) {
+          chatId = tg.initDataUnsafe.chat.id;
+        }
+        if (
+          tg.initDataUnsafe.user &&
+          typeof tg.initDataUnsafe.user.id === "number"
+        ) {
+          userId = tg.initDataUnsafe.user.id;
+        }
+      }
+
+      // 2) Если Mini App‑контекста нет (открыто в браузере) — используем query‑параметры как раньше
+      if (!chatId && (!tg || !tg.initDataUnsafe)) {
+        chatId =
+          tgContext.chat_id && tgContext.chat_id !== "None"
+            ? Number(tgContext.chat_id)
+            : null;
+        userId =
+          tgContext.user_id && tgContext.user_id !== "None"
+            ? Number(tgContext.user_id)
+            : null;
+      }
+
+      const result = {
+        distanceKm: s.D ?? null,
+        time: (() => {
+          if (!s.hasT) return null;
+          const t = s.Tsec;
+          const hh = Math.floor(t / 3600);
+          const mm = Math.floor((t % 3600) / 60);
+          const ss = t % 60;
+          return {
+            hours: hh,
+            minutes: mm,
+            seconds: ss,
+            totalSeconds: t,
+          };
+        })(),
+        pace100m: s.hasP100
+          ? {
+              minutes: Math.floor(s.P100 / 60),
+              seconds: s.P100 % 60,
+              totalSeconds: s.P100,
+            }
+          : null,
+        pacePerKm: s.hasPKM
+          ? {
+              minutes: Math.floor(s.PKM / 60),
+              seconds: s.PKM % 60,
+              totalSeconds: s.PKM,
+            }
+          : null,
+        speedKmh: s.V ?? null,
+        timestamp: new Date().toISOString(),
+        chat_id: chatId,
+        user_id: userId,
+      };
+
+      console.log("Отправка результата на backend:", result);
+
+      try {
+        const resp = await fetch(BACKEND_URL, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify(result),
+        });
+
+        if (!resp.ok) {
+          throw new Error("HTTP " + resp.status);
+        }
+
+        const data = await resp.json().catch(() => ({}));
+        console.log("Ответ backend:", data);
+
+        if (data && data.status === "ok") {
+          if (tg && typeof tg.close === "function") {
+            tg.close(); // корректное закрытие Mini App [file:1]
+          } else {
+            alert("Результат отправлен в чат ✅");
+          }
+        } else {
+          alert("Не удалось отправить результат. Попробуйте ещё раз позже.");
+        }
+      } catch (e) {
+        console.error("Ошибка отправки на backend:", e);
+        alert("Не удалось отправить результат. Попробуйте ещё раз позже.");
+      }
+    });
+
+    compute();
+  </script>
+</body>
+</html>
