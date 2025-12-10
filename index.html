@@ -1,3 +1,5 @@
+index.html
+
 <!doctype html>
 <html lang="ru">
 <head>
@@ -263,178 +265,422 @@
     </form>
   </main>
  
- <script>
-  const BACKEND_URL = "https://pacecalculator-chernaletski.amvera.io/pace-result";
-
-  function getQueryParams() {
-    const params = {};
-    const query = window.location.search.substring(1);
-    if (!query) return params;
-    for (const part of query.split("&")) {
-      const [key, value] = part.split("=");
-      if (!key) continue;
-      params[decodeURIComponent(key)] = value ? decodeURIComponent(value) : "";
-    }
-    return params;
-  }
-
-  const tgContext = getQueryParams();
-  console.log("Telegram context:", tgContext);
-
-  function closeGameWebView() {
-    try {
-      if (window.TelegramGameProxy && typeof TelegramGameProxy.close === "function") {
-        TelegramGameProxy.close();
-        return;
+  <script>
+    // === URL backend'а, который принимает результат ===
+    const BACKEND_URL = "https://pacecalculator-chernaletski.amvera.io/pace-result";
+ 
+    // Получаем query-параметры из URL: ?chat_id=...&message_id=...&user_id=...
+    function getQueryParams() {
+      const params = {};
+      const query = window.location.search.substring(1);
+      if (!query) return params;
+      for (const part of query.split("&")) {
+        const [key, value] = part.split("=");
+        if (!key) continue;
+        params[decodeURIComponent(key)] = value ? decodeURIComponent(value) : "";
       }
-      if (window.Telegram && Telegram.WebApp && typeof Telegram.WebApp.close === "function") {
-        Telegram.WebApp.close();
-        return;
-      }
-      console.log("Not inside Telegram, webview close skipped");
-    } catch (e) {
-      console.error("Failed to close webview", e);
+      return params;
     }
-  }
-
-  let isUpdating = false;
-  let lastEdited = null; // 'D' | 'T' | 'P100' | 'PKM' | 'V'
-
-  const el = {
-    distance: document.getElementById("distance"),
-    hours: document.getElementById("hours"),
-    minutes: document.getElementById("minutes"),
-    seconds: document.getElementById("seconds"),
-    p100_min: document.getElementById("p100_min"),
-    p100_sec: document.getElementById("p100_sec"),
-    pkm_min: document.getElementById("pkm_min"),
-    pkm_sec: document.getElementById("pkm_sec"),
-    speed: document.getElementById("speed"),
-    msg: document.getElementById("msg"),
-    done: document.getElementById("done"),
-    clear: document.getElementById("clear"),
-  };
-
-  console.log("Form elements:", el);
-
-  const num = (v) => {
-    if (v === "" || v === null || v === undefined) return null;
-    const n = Number(v);
-    return Number.isFinite(n) ? n : null;
-  };
-
-  function sanitizeIntInput(input, min, max) {
-    let v = input.value.trim();
-    v = v.replace(/[^\d]/g, "");
-    if (v === "") {
-      input.value = "";
-      return null;
-    }
-    let n = parseInt(v, 10);
-    if (!Number.isFinite(n)) {
-      input.value = "";
-      return null;
-    }
-    if (min !== undefined && n < min) n = min;
-    if (max !== undefined && n > max) n = max;
-    input.value = String(n);
-    return n;
-  }
-
-  function sanitizeDecimalInput(input, min) {
-    let v = input.value.trim();
-    if (!v) {
-      input.value = "";
-      return null;
-    }
-    v = v.replace(",", ".");
-    const parts = v.split(".");
-    if (parts.length > 2) {
-      v = parts[0] + "." + parts.slice(1).join("");
-    }
-    v = v.replace(/[^0-9.]/g, "");
-    input.value = v;
-    const n = parseFloat(v);
-    if (!Number.isFinite(n)) return null;
-    if (min !== undefined && n < min) return null;
-    return n;
-  }
-
-  function readState() {
-    const D = sanitizeDecimalInput(el.distance, 0);
-
-    const hhRaw = sanitizeIntInput(el.hours, 0, 999);
-    const mmRaw = sanitizeIntInput(el.minutes, 0, 59);
-    const ssRaw = sanitizeIntInput(el.seconds, 0, 59);
-    const hasAnyTime = hhRaw !== null || mmRaw !== null || ssRaw !== null;
-    const hh = hhRaw ?? 0;
-    const mm = mmRaw ?? 0;
-    const ss = ssRaw ?? 0;
-    const Tsec = hasAnyTime ? hh * 3600 + mm * 60 + ss : null;
-
-    const p100mRaw = sanitizeIntInput(el.p100_min, 0, 59);
-    const p100sRaw = sanitizeIntInput(el.p100_sec, 0, 59);
-    const hasP100 = p100mRaw !== null || p100sRaw !== null;
-    const p100m = p100mRaw ?? 0;
-    const p100s = p100sRaw ?? 0;
-    const P100 = hasP100 ? p100m * 60 + p100s : null;
-
-    const pkmMRaw = sanitizeIntInput(el.pkm_min, 0, 59);
-    const pkmSRaw = sanitizeIntInput(el.pkm_sec, 0, 59);
-    const hasPKM = pkmMRaw !== null || pkmSRaw !== null;
-    const pkmM = pkmMRaw ?? 0;
-    const pkmS = pkmSRaw ?? 0;
-    const PKM = hasPKM ? pkmM * 60 + pkmS : null;
-
-    const V = sanitizeDecimalInput(el.speed, 0);
-
-    return {
-      D,
-      Tsec,
-      P100,
-      PKM,
-      V,
-      hasD: D !== null,
-      hasT: Tsec !== null,
-      hasP100,
-      hasPKM,
-      hasV: V !== null,
+ 
+    const tgContext = getQueryParams();
+    console.log("Telegram context:", tgContext);
+ 
+    let isUpdating = false;
+    let lastEdited = null; // 'D' | 'T' | 'P100' | 'PKM' | 'V'
+ 
+    const el = {
+      distance: document.getElementById("distance"),
+      hours: document.getElementById("hours"),
+      minutes: document.getElementById("minutes"),
+      seconds: document.getElementById("seconds"),
+      p100_min: document.getElementById("p100_min"),
+      p100_sec: document.getElementById("p100_sec"),
+      pkm_min: document.getElementById("pkm_min"),
+      pkm_sec: document.getElementById("pkm_sec"),
+      speed: document.getElementById("speed"),
+      msg: document.getElementById("msg"),
+      done: document.getElementById("done"),
+      clear: document.getElementById("clear"),
     };
-  }
-
-  // дальше весь твой compute/setDistance/setTime/... БЕЗ ИЗМЕНЕНИЙ
-
-  function setDistance(D) { /* как у тебя */ }
-  function setTime(Tsec) { /* как у тебя */ }
-  function setP100(seconds) { /* как у тебя */ }
-  function setPKM(seconds) { /* как у тебя */ }
-  function setSpeed(V) { /* как у тебя */ }
-  function showMsg(text, type = "") { /* как у тебя */ }
-  function compute() { /* как у тебя */ }
-
-  function onEdit(category) {
-    lastEdited = category;
-    compute();
-  }
-
-  // Безопасно навешиваем обработчики
-  el.distance && el.distance.addEventListener("input", () => onEdit("D"));
-
-  [el.hours, el.minutes, el.seconds].forEach((i) =>
-    i && i.addEventListener("input", () => onEdit("T"))
-  );
-
-  [el.p100_min, el.p100_sec].forEach((i) =>
-    i && i.addEventListener("input", () => onEdit("P100"))
-  );
-
-  [el.pkm_min, el.pkm_sec].forEach((i) =>
-    i && i.addEventListener("input", () => onEdit("PKM"))
-  );
-
-  el.speed && el.speed.addEventListener("input", () => onEdit("V"));
-
-  el.clear &&
+ 
+    const num = (v) => {
+      if (v === "" || v === null || v === undefined) return null;
+      const n = Number(v);
+      return Number.isFinite(n) ? n : null;
+    };
+ 
+    function sanitizeIntInput(input, min, max) {
+      let v = input.value.trim();
+      v = v.replace(/[^\d]/g, "");
+      if (v === "") {
+        input.value = "";
+        return null;
+      }
+      let n = parseInt(v, 10);
+      if (!Number.isFinite(n)) {
+        input.value = "";
+        return null;
+      }
+      if (min !== undefined && n < min) n = min;
+      if (max !== undefined && n > max) n = max;
+      input.value = String(n);
+      return n;
+    }
+ 
+    function sanitizeDecimalInput(input, min) {
+      let v = input.value.trim();
+      if (!v) {
+        input.value = "";
+        return null;
+      }
+      v = v.replace(",", ".");
+      const parts = v.split(".");
+      if (parts.length > 2) {
+        v = parts[0] + "." + parts.slice(1).join("");
+      }
+      v = v.replace(/[^0-9.]/g, "");
+      input.value = v;
+      const n = parseFloat(v);
+      if (!Number.isFinite(n)) return null;
+      if (min !== undefined && n < min) return null;
+      return n;
+    }
+ 
+    function readState() {
+      const D = sanitizeDecimalInput(el.distance, 0);
+ 
+      const hhRaw = sanitizeIntInput(el.hours, 0, 999);
+      const mmRaw = sanitizeIntInput(el.minutes, 0, 59);
+      const ssRaw = sanitizeIntInput(el.seconds, 0, 59);
+      const hasAnyTime = hhRaw !== null || mmRaw !== null || ssRaw !== null;
+      const hh = hhRaw ?? 0;
+      const mm = mmRaw ?? 0;
+      const ss = ssRaw ?? 0;
+      const Tsec = hasAnyTime ? hh * 3600 + mm * 60 + ss : null;
+ 
+      const p100mRaw = sanitizeIntInput(el.p100_min, 0, 59);
+      const p100sRaw = sanitizeIntInput(el.p100_sec, 0, 59);
+      const hasP100 = p100mRaw !== null || p100sRaw !== null;
+      const p100m = p100mRaw ?? 0;
+      const p100s = p100sRaw ?? 0;
+      const P100 = hasP100 ? p100m * 60 + p100s : null;
+ 
+      const pkmMRaw = sanitizeIntInput(el.pkm_min, 0, 59);
+      const pkmSRaw = sanitizeIntInput(el.pkm_sec, 0, 59);
+      const hasPKM = pkmMRaw !== null || pkmSRaw !== null;
+      const pkmM = pkmMRaw ?? 0;
+      const pkmS = pkmSRaw ?? 0;
+      const PKM = hasPKM ? pkmM * 60 + pkmS : null;
+ 
+      const V = sanitizeDecimalInput(el.speed, 0);
+ 
+      return {
+        D,
+        Tsec,
+        P100,
+        PKM,
+        V,
+        hasD: D !== null,
+        hasT: Tsec !== null,
+        hasP100,
+        hasPKM,
+        hasV: V !== null,
+      };
+    }
+ 
+    function setDistance(D) {
+      if (el.distance === document.activeElement) return;
+      el.distance.value = (D ?? 0).toFixed(2);
+    }
+    function setTime(Tsec) {
+      if ([el.hours, el.minutes, el.seconds].includes(document.activeElement)) return;
+      const t = Math.max(0, Math.round(Tsec ?? 0));
+      const hh = Math.floor(t / 3600);
+      const mm = Math.floor((t % 3600) / 60);
+      const ss = t % 60;
+      el.hours.value = String(hh);
+      el.minutes.value = String(mm);
+      el.seconds.value = String(ss);
+    }
+    function setP100(seconds) {
+      if ([el.p100_min, el.p100_sec].includes(document.activeElement)) return;
+      const s = Math.max(0, Math.round(seconds ?? 0));
+      const m = Math.floor(s / 60);
+      const sec = s % 60;
+      el.p100_min.value = String(m);
+      el.p100_sec.value = String(sec);
+    }
+    function setPKM(seconds) {
+      if ([el.pkm_min, el.pkm_sec].includes(document.activeElement)) return;
+      const s = Math.max(0, Math.round(seconds ?? 0));
+      const m = Math.floor(s / 60);
+      const sec = s % 60;
+      el.pkm_min.value = String(m);
+      el.pkm_sec.value = String(sec);
+    }
+    function setSpeed(V) {
+      if (el.speed === document.activeElement) return;
+      el.speed.value = (V ?? 0).toFixed(2);
+    }
+ 
+    function showMsg(text, type = "") {
+      el.msg.textContent = text || "";
+      el.msg.classList.remove("ok", "error");
+      if (type) el.msg.classList.add(type);
+    }
+ 
+    function compute() {
+      if (isUpdating) return;
+      isUpdating = true;
+ 
+      const s = readState();
+      const count = ["hasD", "hasT", "hasP100", "hasPKM", "hasV"].reduce(
+        (acc, k) => acc + (s[k] ? 1 : 0),
+        0
+      );
+ 
+      if (count < 2) {
+        showMsg("Укажите минимум два параметра для расчёта.", "error");
+        isUpdating = false;
+        return;
+      }
+ 
+      if (s.D !== null && s.D > 1000) {
+        showMsg("Дистанция слишком большая (максимум 1000 км).", "error");
+        isUpdating = false;
+        return;
+      }
+      if (s.V !== null && s.V > 100) {
+        showMsg("Скорость слишком большая (максимум 100 км/ч).", "error");
+        isUpdating = false;
+        return;
+      }
+ 
+      let { D, Tsec: T, P100, PKM, V } = s;
+      let solved = false;
+ 
+      function useDT() {
+        if (s.hasD && s.hasT && s.D > 0 && s.Tsec > 0) {
+          D = s.D;
+          T = s.Tsec;
+          PKM = T / D;
+          P100 = PKM / 10;
+          V = D / (T / 3600);
+          solved = true;
+        }
+      }
+      function useDP100() {
+        if (s.hasD && s.hasP100 && s.D > 0 && s.P100 > 0) {
+          D = s.D;
+          P100 = s.P100;
+          PKM = P100 * 10;
+          T = D * PKM;
+          V = D / (T / 3600);
+          solved = true;
+        }
+      }
+      function useDPKM() {
+        if (s.hasD && s.hasPKM && s.D > 0 && s.PKM > 0) {
+          D = s.D;
+          PKM = s.PKM;
+          T = D * PKM;
+          P100 = PKM / 10;
+          V = 3600 / PKM;
+          solved = true;
+        }
+      }
+      function useDV() {
+        if (s.hasD && s.hasV && s.D > 0 && s.V > 0) {
+          D = s.D;
+          V = s.V;
+          T = (D / V) * 3600;
+          PKM = 3600 / V;
+          P100 = PKM / 10;
+          solved = true;
+        }
+      }
+      function useTP100() {
+        if (s.hasT && s.hasP100 && s.Tsec > 0 && s.P100 > 0) {
+          T = s.Tsec;
+          P100 = s.P100;
+          PKM = P100 * 10;
+          D = T / PKM;
+          V = D / (T / 3600);
+          solved = true;
+        }
+      }
+      function useTPKM() {
+        if (s.hasT && s.hasPKM && s.Tsec > 0 && s.PKM > 0) {
+          T = s.Tsec;
+          PKM = s.PKM;
+          D = T / PKM;
+          P100 = PKM / 10;
+          V = 3600 / PKM;
+          solved = true;
+        }
+      }
+      function useTV() {
+        if (s.hasT && s.hasV && s.Tsec > 0 && s.V > 0) {
+          T = s.Tsec;
+          V = s.V;
+          D = V * (T / 3600);
+          PKM = 3600 / V;
+          P100 = PKM / 10;
+          solved = true;
+        }
+      }
+ 
+      switch (lastEdited) {
+        case "D":
+          useDT();
+          if (!solved) useDP100();
+          if (!solved) useDPKM();
+          if (!solved) useDV();
+          break;
+        case "T":
+          useDT();
+          if (!solved) useTP100();
+          if (!solved) useTPKM();
+          if (!solved) useTV();
+          break;
+        case "P100":
+          useDP100();
+          if (!solved) useTP100();
+          if (!solved && s.hasPKM) {
+            P100 = s.P100;
+            PKM = P100 * 10;
+            if (s.hasV && s.V > 0) {
+              V = 3600 / PKM;
+            }
+            solved = true;
+          }
+          if (!solved && s.hasV && s.V > 0) {
+            P100 = s.P100;
+            PKM = P100 * 10;
+            V = 3600 / PKM;
+            solved = true;
+          }
+          break;
+        case "PKM":
+          useDPKM();
+          if (!solved) useTPKM();
+          if (!solved && s.hasP100) {
+            PKM = s.PKM;
+            P100 = PKM / 10;
+            if (s.hasV && s.V > 0) {
+              V = 3600 / PKM;
+            }
+            solved = true;
+          }
+          if (!solved && s.hasV && s.V > 0) {
+            PKM = s.PKM;
+            V = 3600 / PKM;
+            P100 = PKM / 10;
+            solved = true;
+          }
+          break;
+        case "V":
+          useDV();
+          if (!solved) useTV();
+          if (!solved && s.hasPKM) {
+            V = s.V;
+            PKM = 3600 / V;
+            P100 = PKM / 10;
+            solved = true;
+          }
+          if (!solved && s.hasP100) {
+            V = s.V;
+            PKM = 3600 / V;
+            P100 = PKM / 10;
+            solved = true;
+          }
+          break;
+        default:
+          useDT();
+          if (!solved) useDP100();
+          if (!solved) useDPKM();
+          if (!solved) useDV();
+          if (!solved) useTP100();
+          if (!solved) useTPKM();
+          if (!solved) useTV();
+      }
+ 
+      if (!solved) {
+        if (s.hasPKM && !s.hasP100) {
+          PKM = s.PKM;
+          P100 = PKM / 10;
+          solved = true;
+          showMsg(
+            "Добавьте дистанцию или время, чтобы посчитать всё остальное.",
+            "ok"
+          );
+        } else if (s.hasP100 && !s.hasPKM) {
+          P100 = s.P100;
+          PKM = P100 * 10;
+          solved = true;
+          showMsg(
+            "Добавьте дистанцию или время, чтобы посчитать всё остальное.",
+            "ok"
+          );
+        } else if (s.hasV && !s.hasPKM && !s.hasP100) {
+          V = s.V;
+          PKM = 3600 / V;
+          P100 = PKM / 10;
+          solved = true;
+          showMsg(
+            "Добавьте дистанцию или время, чтобы посчитать всё остальное.",
+            "ok"
+          );
+        } else {
+          showMsg(
+            "Недостаточно данных для однозначного расчёта. Уточните комбинацию.",
+            "error"
+          );
+        }
+      }
+ 
+      if (s.hasP100 && s.hasPKM) {
+        const expectedPKM = s.P100 * 10;
+        if (Math.abs(s.PKM - expectedPKM) > 2) {
+          if (lastEdited === "P100") {
+            PKM = expectedPKM;
+          } else if (lastEdited === "PKM") {
+            P100 = s.PKM / 10;
+          }
+        }
+      }
+ 
+      if (solved) {
+        if (Number.isFinite(D)) setDistance(D);
+        if (Number.isFinite(T)) setTime(T);
+        if (Number.isFinite(P100)) setP100(P100);
+        if (Number.isFinite(PKM)) setPKM(PKM);
+        if (Number.isFinite(V)) setSpeed(V);
+        if (!el.msg.textContent || el.msg.classList.contains("error")) {
+          showMsg("Расчёт выполнен успешно.", "ok");
+        }
+      }
+ 
+      isUpdating = false;
+    }
+ 
+    function onEdit(category) {
+      lastEdited = category;
+      compute();
+    }
+ 
+    el.distance.addEventListener("input", () => onEdit("D"));
+    [el.hours, el.minutes, el.seconds].forEach((i) =>
+      i.addEventListener("input", () => onEdit("T"))
+    );
+    [el.p100_min, el.p100_sec].forEach((i) =>
+      i.addEventListener("input", () => onEdit("P100"))
+    );
+    [el.pkm_min, el.pkm_sec].forEach((i) =>
+      i.addEventListener("input", () => onEdit("PKM"))
+    );
+    el.speed.addEventListener("input", () => onEdit("V"));
+ 
     el.clear.addEventListener("click", () => {
       isUpdating = true;
       [
@@ -447,13 +693,13 @@
         el.pkm_min,
         el.pkm_sec,
         el.speed,
-      ].forEach((inp) => inp && (inp.value = ""));
+      ].forEach((inp) => (inp.value = ""));
       lastEdited = null;
       isUpdating = false;
       showMsg("");
     });
-
-  el.done &&
+ 
+    // Кнопка "Готово" — отправка результата на backend
     el.done.addEventListener("click", async () => {
       const s = readState();
       const count = ["hasD", "hasT", "hasP100", "hasPKM", "hasV"].reduce(
@@ -464,24 +710,25 @@
         alert("Введите минимум два параметра перед отправкой.");
         return;
       }
-
+ 
+      // chat_id: сначала из chat_id, если нет — берём user_id
       const chatId =
         tgContext.chat_id && tgContext.chat_id !== "None"
           ? Number(tgContext.chat_id)
           : tgContext.user_id && tgContext.user_id !== "None"
           ? Number(tgContext.user_id)
           : null;
-
+ 
       const messageId =
         tgContext.message_id && tgContext.message_id !== "None"
           ? Number(tgContext.message_id)
           : null;
-
+ 
       const userId =
         tgContext.user_id && tgContext.user_id !== "None"
           ? Number(tgContext.user_id)
           : null;
-
+ 
       const result = {
         distanceKm: s.D ?? null,
         time: (() => {
@@ -517,36 +764,33 @@
         message_id: messageId,
         user_id: userId,
       };
-
+ 
       console.log("Отправка результата на backend:", result);
-
+ 
       try {
         const resp = await fetch(BACKEND_URL, {
           method: "POST",
-          headers: { "Content-Type": "application/json" },
+          headers: {
+            "Content-Type": "application/json",
+          },
           body: JSON.stringify(result),
         });
-
+ 
+        if (!resp.ok) {
+          throw new Error("HTTP " + resp.status);
+        }
+ 
         const data = await resp.json().catch(() => ({}));
         console.log("Ответ backend:", data);
-
-        if (!resp.ok || data.status !== "ok") {
-          throw new Error("Backend error: " + JSON.stringify(data));
-        }
-
-        if (window.TelegramGameProxy || (window.Telegram && Telegram.WebApp)) {
-          closeGameWebView();
-        } else {
-          alert("Результат отправлен в чат ✅");
-        }
+ 
+        alert("Результат отправлен в чат ✅");
       } catch (e) {
         console.error("Ошибка отправки на backend:", e);
         alert("Не удалось отправить результат. Попробуйте ещё раз позже.");
       }
     });
-
-  compute();
-</script>
+ 
+    compute();
+  </script>
 </body>
 </html>
-
