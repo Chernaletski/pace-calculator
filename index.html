@@ -668,30 +668,50 @@
         return;
       }
 
-      const result = {
-        distanceKm: s.D ?? null,
-        time: (() => {
-          if (!s.hasT) return null;
-          const t = s.Tsec;
-          const hh = Math.floor(t/3600), mm = Math.floor((t%3600)/60), ss = t%60;
-          return { hours: hh, minutes: mm, seconds: ss, totalSeconds: t };
-        })(),
-        pace100m: s.hasP100 ? {
-          minutes: Math.floor(s.P100/60),
-          seconds: s.P100%60,
-          totalSeconds: s.P100
-        } : null,
-        pacePerKm: s.hasPKM ? {
-          minutes: Math.floor(s.PKM/60),
-          seconds: s.PKM%60,
-          totalSeconds: s.PKM
-        } : null,
-        speedKmh: s.V ?? null,
-        timestamp: new Date().toISOString(),
-        chat_id: tgContext.chat_id || null,
-        message_id: tgContext.message_id || null,
-        user_id: tgContext.user_id || null
-      };
+      const chatId =
+  tgContext.chat_id && tgContext.chat_id !== "None"
+    ? Number(tgContext.chat_id)
+    : null;
+const messageId =
+  tgContext.message_id && tgContext.message_id !== "None"
+    ? Number(tgContext.message_id)
+    : null;
+const userId =
+  tgContext.user_id && tgContext.user_id !== "None"
+    ? Number(tgContext.user_id)
+    : null;
+
+const result = {
+  distanceKm: s.D ?? null,
+  time: (() => {
+    if (!s.hasT) return null;
+    const t = s.Tsec;
+    const hh = Math.floor(t / 3600),
+      mm = Math.floor((t % 3600) / 60),
+      ss = t % 60;
+    return { hours: hh, minutes: mm, seconds: ss, totalSeconds: t };
+  })(),
+  pace100m: s.hasP100
+    ? {
+        minutes: Math.floor(s.P100 / 60),
+        seconds: s.P100 % 60,
+        totalSeconds: s.P100,
+      }
+    : null,
+  pacePerKm: s.hasPKM
+    ? {
+        minutes: Math.floor(s.PKM / 60),
+        seconds: s.PKM % 60,
+        totalSeconds: s.PKM,
+      }
+    : null,
+  speedKmh: s.V ?? null,
+  timestamp: new Date().toISOString(),
+  chat_id: chatId,
+  message_id: messageId,
+  user_id: userId,
+};
+
 
       console.log('Отправка результата на backend:', result);
 
@@ -722,4 +742,5 @@
   </script>
 </body>
 </html>
+
 
