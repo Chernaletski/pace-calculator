@@ -268,10 +268,8 @@
   </main>
 
   <script>
-    // === URL backend'а, который принимает результат ===
     const BACKEND_URL = "https://pacecalculator-chernaletski.amvera.io/pace-result";
 
-    // Telegram Mini App объект (если открыт внутри Telegram)
     const tg = window.Telegram && window.Telegram.WebApp ? window.Telegram.WebApp : null;
     if (tg) {
       tg.ready();
@@ -280,8 +278,6 @@
       }
     }
 
-    // Получаем query-параметры из URL: ?chat_id=...&message_id=...&user_id=...
-    // (оставляем как fallback для открытия в обычном браузере)
     function getQueryParams() {
       const params = {};
       const query = window.location.search.substring(1);
@@ -302,6 +298,7 @@
 
     let isUpdating = false;
     let lastEdited = null; // 'D' | 'T' | 'P100' | 'PKM' | 'V'
+    const lastTwo = [];    // последние две отредактированные категории
 
     const el = {
       distance: document.getElementById("distance"),
@@ -373,7 +370,6 @@
       const ss = ssRaw ?? 0;
       const Tsec = hasAnyTime ? hh * 3600 + mm * 60 + ss : null;
 
-      // минуты темпа без верхнего ограничения
       const p100mRaw = sanitizeIntInput(el.p100_min, 0);
       const p100sRaw = sanitizeIntInput(el.p100_sec, 0, 59);
       const hasP100 = p100mRaw !== null || p100sRaw !== null;
@@ -546,80 +542,62 @@
         }
       }
 
-      switch (lastEdited) {
-        case "D":
-          useDT();
-          if (!solved) useDP100();
-          if (!solved) useDPKM();
-          if (!solved) useDV();
-          break;
-        case "T":
-          // при изменении времени сначала используем пару T+P100/T+PKM/T+V
-          useTP100();
-          if (!solved) useTPKM();
-          if (!solved) useTV();
-          if (!solved) useDT();
-          break;
-        case "P100":
-          useDP100();
-          if (!solved) useTP100();
-          if (!solved && s.hasPKM) {
-            P100 = s.P100;
-            PKM = P100 * 10;
-            if (s.hasV && s.V > 0) {
-              V = 3600 / PKM;
-            }
-            solved = true;
-          }
-          if (!solved && s.hasV && s.V > 0) {
-            P100 = s.P100;
-            PKM = P100 * 10;
-            V = 3600 / PKM;
-            solved = true;
-          }
-          break;
-        case "PKM":
-          useDPKM();
-          if (!solved) useTPKM();
-          if (!solved && s.hasP100) {
-            PKM = s.PKM;
-            P100 = PKM / 10;
-            if (s.hasV && s.V > 0) {
-              V = 3600 / PKM;
-            }
-            solved = true;
-          }
-          if (!solved && s.hasV && s.V > 0) {
-            PKM = s.PKM;
-            V = 3600 / PKM;
-            P100 = PKM / 10;
-            solved = true;
-          }
-          break;
-        case "V":
-          useDV();
-          if (!solved) useTV();
-          if (!solved && s.hasPKM) {
-            V = s.V;
-            PKM = 3600 / V;
-            P100 = PKM / 10;
-            solved = true;
-          }
-          if (!solved && s.hasP100) {
-            V = s.V;
-            PKM = 3600 / V;
-            P100 = PKM / 10;
-            solved = true;
-          }
-          break;
-        default:
-          useDT();
-          if (!solved) useDP100();
-          if (!solved) useDPKM();
-          if (!solved) useDV();
-          if (!solved) useTP100();
-          if (!solved) useTPKM();
-          if (!solved) useTV();
+      function fallbackByLastEdited() {
+        switch (lastEdited) {
+          case "D":
+            useDT();
+            if (!solved) useDP100();
+            if (!solved) useDPKM();
+            if (!solved) useDV();
+            break;
+          case "T":
+            useTP100();
+            if (!solved) useTPKM();
+            if (!solved) useTV();
+            if (!solved) useDT();
+            break;
+          case "P100":
+            useDP100();
+            if (!solved) useTP100();
+            break;
+          case "PKM":
+            useDPKM();
+            if (!solved) useTPKM();
+            break;
+          case "V":
+            useDV();
+            if (!solved) useTV();
+            break;
+          default:
+            useDT();
+            if (!solved) useDP100();
+            if (!solved) useDPKM();
+            if (!solved) useDV();
+            if (!solved) useTP100();
+            if (!solved) useTPKM();
+            if (!solved) useTV();
+        }
+      }
+
+      function usePair(x, y) {
+        if (!x || !y) return;
+        if ((x === "D" && y === "T") || (x === "T" && y === "D")) { useDT(); return; }
+        if ((x === "D" && y === "P100") || (x === "P100" && y === "D")) { useDP100(); return; }
+        if ((x === "D" && y === "PKM") || (x === "PKM" && y === "D")) { useDPKM(); return; }
+        if ((x === "D" && y === "V") || (x === "V" && y === "D")) { useDV(); return; }
+        if ((x === "T" && y === "P100") || (x === "P100" && y === "T")) { useTP100(); return; }
+        if ((x === "T" && y === "PKM") || (x === "PKM" && y === "T")) { useTPKM(); return; }
+        if ((x === "T" && y === "V") || (x === "V" && y === "T")) { useTV(); return; }
+      }
+
+      const a = lastTwo[0];
+      const b = lastTwo[1];
+
+      if (a && b) {
+        usePair(a, b);
+        if (!solved) fallbackByLastEdited();
+      } else {
+        fallbackByLastEdited();
       }
 
       if (!solved) {
@@ -683,6 +661,14 @@
 
     function onEdit(category) {
       lastEdited = category;
+
+      const idx = lastTwo.indexOf(category);
+      if (idx !== -1) {
+        lastTwo.splice(idx, 1);
+      }
+      lastTwo.push(category);
+      if (lastTwo.length > 2) lastTwo.shift();
+
       compute();
     }
 
@@ -712,140 +698,134 @@
         el.speed,
       ].forEach((inp) => (inp.value = ""));
       lastEdited = null;
+      lastTwo.length = 0;
       isUpdating = false;
       showMsg("");
     });
 
-   // Кнопка "Готово" — отправка результата на backend + закрытие Mini App
-el.done.addEventListener("click", async () => {
-  const s = readState();
-  const count = ["hasD", "hasT", "hasP100", "hasPKM", "hasV"].reduce(
-    (acc, k) => acc + (s[k] ? 1 : 0),
-    0
-  );
-  if (count < 2) {
-    alert("Введите минимум два параметра перед отправкой.");
-    return;
-  }
+    // Кнопка "Готово" — отправка результата на backend + закрытие Mini App
+    el.done.addEventListener("click", async () => {
+      const s = readState();
+      const count = ["hasD", "hasT", "hasP100", "hasPKM", "hasV"].reduce(
+        (acc, k) => acc + (s[k] ? 1 : 0),
+        0
+      );
+      if (count < 2) {
+        alert("Введите минимум два параметра перед отправкой.");
+        return;
+      }
 
-  // 1) Пытаемся взять chat_id / user_id из Mini App initDataUnsafe
-  let chatId = null;
-  let userId = null;
+      let chatId = null;
+      let userId = null;
 
-  if (tg && tg.initDataUnsafe) {
-    if (
-      tg.initDataUnsafe.chat &&
-      typeof tg.initDataUnsafe.chat.id === "number"
-    ) {
-      chatId = tg.initDataUnsafe.chat.id;
-    }
-    if (
-      tg.initDataUnsafe.user &&
-      typeof tg.initDataUnsafe.user.id === "number"
-    ) {
-      userId = tg.initDataUnsafe.user.id;
-    }
-  }
+      if (tg && tg.initDataUnsafe) {
+        if (
+          tg.initDataUnsafe.chat &&
+          typeof tg.initDataUnsafe.chat.id === "number"
+        ) {
+          chatId = tg.initDataUnsafe.chat.id;
+        }
+        if (
+          tg.initDataUnsafe.user &&
+          typeof tg.initDataUnsafe.user.id === "number"
+        ) {
+          userId = tg.initDataUnsafe.user.id;
+        }
+      }
 
-  // 2) Если Mini App‑контекста нет (открыто в браузере) — используем query‑параметры как раньше
-  if (!chatId && (!tg || !tg.initDataUnsafe)) {
-    chatId =
-      tgContext.chat_id && tgContext.chat_id !== "None"
-        ? Number(tgContext.chat_id)
-        : null;
-    userId =
-      tgContext.user_id && tgContext.user_id !== "None"
-        ? Number(tgContext.user_id)
-        : null;
-  }
+      if (!chatId && (!tg || !tg.initDataUnsafe)) {
+        chatId =
+          tgContext.chat_id && tgContext.chat_id !== "None"
+            ? Number(tgContext.chat_id)
+            : null;
+        userId =
+          tgContext.user_id && tgContext.user_id !== "None"
+            ? Number(tgContext.user_id)
+            : null;
+      }
 
-  const result = {
-    distanceKm: s.D ?? null,
-    time: (() => {
-      if (!s.hasT) return null;
-      const t = s.Tsec;
-      const hh = Math.floor(t / 3600);
-      const mm = Math.floor((t % 3600) / 60);
-      const ss = t % 60;
-      return {
-        hours: hh,
-        minutes: mm,
-        seconds: ss,
-        totalSeconds: t,
+      const result = {
+        distanceKm: s.D ?? null,
+        time: (() => {
+          if (!s.hasT) return null;
+          const t = s.Tsec;
+          const hh = Math.floor(t / 3600);
+          const mm = Math.floor((t % 3600) / 60);
+          const ss = t % 60;
+          return {
+            hours: hh,
+            minutes: mm,
+            seconds: ss,
+            totalSeconds: t,
+          };
+        })(),
+        pace100m: s.hasP100
+          ? {
+              minutes: Math.floor(s.P100 / 60),
+              seconds: s.P100 % 60,
+              totalSeconds: s.P100,
+            }
+          : null,
+        pacePerKm: s.hasPKM
+          ? {
+              minutes: Math.floor(s.PKM / 60),
+              seconds: s.PKM % 60,
+              totalSeconds: s.PKM,
+            }
+          : null,
+        speedKmh: s.V ?? null,
+        timestamp: new Date().toISOString(),
+        chat_id: chatId,
+        user_id: userId,
       };
-    })(),
-    pace100m: s.hasP100
-      ? {
-          minutes: Math.floor(s.P100 / 60),
-          seconds: s.P100 % 60,
-          totalSeconds: s.P100,
+
+      console.log("Отправка результата на backend:", result);
+
+      const failMessage =
+        "Для получения результата расчета необходимо в чате бота написать команду /start";
+
+      try {
+        const resp = await fetch(BACKEND_URL, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify(result),
+        });
+
+        if (!resp.ok) {
+          throw new Error("HTTP " + resp.status);
         }
-      : null,
-    pacePerKm: s.hasPKM
-      ? {
-          minutes: Math.floor(s.PKM / 60),
-          seconds: s.PKM % 60,
-          totalSeconds: s.PKM,
+
+        const data = await resp.json().catch(() => ({}));
+        console.log("Ответ backend:", data);
+
+        if (data && data.status === "ok") {
+          if (tg && typeof tg.close === "function") {
+            tg.close();
+          } else {
+            alert("Результат отправлен в чат ✅");
+          }
+        } else {
+          if (tg && typeof tg.close === "function") {
+            alert(failMessage);
+            tg.close();
+          } else {
+            alert(failMessage);
+          }
         }
-      : null,
-    speedKmh: s.V ?? null,
-    timestamp: new Date().toISOString(),
-    chat_id: chatId,
-    user_id: userId,
-  };
-
-  console.log("Отправка результата на backend:", result);
-
-  const failMessage =
-    "Для получения результата расчета необходимо в чате бота написать команду /start";
-
-  try {
-    const resp = await fetch(BACKEND_URL, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify(result),
+      } catch (e) {
+        console.error("Ошибка отправки на backend:", e);
+        if (tg && typeof tg.close === "function") {
+          alert(failMessage);
+          tg.close();
+        } else {
+          alert(failMessage);
+        }
+      }
     });
-
-    if (!resp.ok) {
-      throw new Error("HTTP " + resp.status);
-    }
-
-    const data = await resp.json().catch(() => ({}));
-    console.log("Ответ backend:", data);
-
-    if (data && data.status === "ok") {
-      // Успех: в Telegram просто закрываем Mini App, в браузере показываем алерт
-      if (tg && typeof tg.close === "function") {
-        tg.close();
-      } else {
-        alert("Результат отправлен в чат ✅");
-      }
-    } else {
-      // Логическая ошибка backend'а
-      if (tg && typeof tg.close === "function") {
-        alert(failMessage);
-        tg.close();
-      } else {
-        alert(failMessage);
-      }
-    }
-  } catch (e) {
-    console.error("Ошибка отправки на backend:", e);
-    // Ошибка сети / fetch: та же логика, что и при неуспешном ответе
-    if (tg && typeof tg.close === "function") {
-      alert(failMessage);
-      tg.close();
-    } else {
-      alert(failMessage);
-    }
-  }
-});
-
 
     compute();
   </script>
 </body>
 </html>
-
